@@ -64,13 +64,17 @@ void setupUI() {
   label_hasBusFailure = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
 
   ESPUI.addControl(Separator, "Haldex State", "", Dark, tabDiag);
-  label_haldexState = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+  label_HaldexState = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
   ESPUI.addControl(Separator, "Haldex Temp", "", Dark, tabDiag);
-  label_haldexTemp = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+  label_HaldexTemp = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
   ESPUI.addControl(Separator, "Haldex Clutch 1", "", Dark, tabDiag);
   label_HaldexClutch1 = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
   ESPUI.addControl(Separator, "Haldex Clutch 2", "", Dark, tabDiag);
   label_HaldexClutch2 = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+  ESPUI.addControl(Separator, "Haldex Coupling", "", Dark, tabDiag);
+  label_HaldexCoupling = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+  ESPUI.addControl(Separator, "Haldex Speed Limit", "", Dark, tabDiag);
+  label_HaldexSpeedLimit = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
 
   ESPUI.addControl(Separator, "Speed", "", Dark, tabDiag);
   label_currentSpeed = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
@@ -106,6 +110,24 @@ void generalCallback(Control *sender, int type) {
   Serial.print("' = ");
   Serial.println(sender->value);
 #endif
+
+  uint8_t tempID = int(sender->id);
+  switch (tempID) {
+    case 3:
+      if (sender->value == "Stock") {
+        state.mode = MODE_STOCK;
+      }
+      if (sender->value == "FWD") {
+        state.mode = MODE_FWD;
+      }
+      if (sender->value == "5050") {
+        state.mode = MODE_5050;
+      }
+      if (sender->value == "7525") {
+        state.mode = MODE_7525;
+      }
+      break;
+  }
 }
 
 void extendedCallback(Control *sender, int type, void *param) {
@@ -121,4 +143,111 @@ void extendedCallback(Control *sender, int type, void *param) {
   Serial.print("param = ");
   Serial.println((long)param);
 #endif
+}
+
+void updateLabels() {
+  if (lastCANChassis < 500) {
+    hasCANChassis = true;
+  } else {
+    hasCANChassis = false;
+  }
+  if (lastCANHaldex < 500) {
+    hasCANHaldex = true;
+  } else {
+    hasCANHaldex = false;
+  }
+
+  if (hasCANChassis) {
+    ESPUI.updateLabel(label_hasChassisCAN, "Yes");
+  } else {
+    ESPUI.updateLabel(label_hasChassisCAN, "No");
+  }
+  if (hasCANHaldex) {
+    ESPUI.updateLabel(label_hasHaldexCAN, "Yes");
+  } else {
+    ESPUI.updateLabel(label_hasHaldexCAN, "No");
+  }
+
+  if (isBusFailure) {
+    ESPUI.updateLabel(label_hasBusFailure, "Yes");
+  } else {
+    ESPUI.updateLabel(label_hasBusFailure, "No");
+  }
+
+  char haldexTemp[50];
+  sprintf(haldexTemp, "Req:Act: %d", received_haldex_engagement);
+  ESPUI.updateLabel(label_currentLocking, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "State: %d", received_haldex_state);
+  ESPUI.updateLabel(label_HaldexTemp, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "Clutch 1: %d", received_report_clutch1);
+  ESPUI.updateLabel(label_HaldexClutch1, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "Clutch 2: %d", received_report_clutch2);
+  ESPUI.updateLabel(label_HaldexClutch2, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "Coupling: %d", received_coupling_open);
+  ESPUI.updateLabel(label_HaldexCoupling, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "Speed Limit: %d", received_speed_limit);
+  ESPUI.updateLabel(label_HaldexSpeedLimit, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "Speed: %d", received_vehicle_speed);
+  ESPUI.updateLabel(label_currentSpeed, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "RPM: %d", received_pedal_value);
+  ESPUI.updateLabel(label_currentRPM, String(haldexTemp));
+
+  haldexTemp[0] = '\0';
+  sprintf(haldexTemp, "Boost: %d(mbar)", received_speed_limit);
+  ESPUI.updateLabel(label_currentBoost, String(haldexTemp));
+
+  switch (haldexGeneration) {
+    case 1:
+      ESPUI.updateSelect(int16_haldexGeneration, "Gen1");
+      break;
+    case 2:
+      ESPUI.updateSelect(int16_haldexGeneration, "Gen2");
+      break;
+    case 4:
+      ESPUI.updateSelect(int16_haldexGeneration, "Gen4");
+      break;
+  }
+
+  switch (state.mode) {
+    case 0:
+      ESPUI.updateSelect(int16_currentMode, "Stock");
+      break;
+    case 1:
+      ESPUI.updateSelect(int16_currentMode, "FWD");
+      break;
+    case 2:
+      ESPUI.updateSelect(int16_currentMode, "5050");
+      break;
+    case 3:
+      ESPUI.updateSelect(int16_currentMode, "7525");
+      break;
+  }
+
+  if (state.mode == MODE_STOCK) {
+    strip.setLedColorData(led_channel, led_brightness, 0, 0);
+  }
+  if (state.mode == MODE_FWD) {
+    strip.setLedColorData(led_channel, 0, led_brightness, 0);
+  }
+  if (state.mode == MODE_5050) {
+    strip.setLedColorData(led_channel, 0, 0, led_brightness);
+  }
+  if (state.mode == MODE_7525) {
+    strip.setLedColorData(led_channel, 0, led_brightness, led_brightness);
+  }
+  strip.show();
 }

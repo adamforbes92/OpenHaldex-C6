@@ -15,8 +15,8 @@ void setupIO() {
   twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();                                                           // accept all messages
 
   //g_config.intr_flags = ESP_INTR_FLAG_LOWMED;  //Optional - move canbus irq to free up the default level 1 IRQ it will take up.  Todo
-  g_config.tx_queue_len = 4096;  //<TWAI_GENERAL_CONFIG_DEFAULT default is 5, use this to increase if needed
-  g_config.rx_queue_len = 4096;  //<TWAI_GENERAL_CONFIG_DEFAULT default is 5, use this to increase if needed
+  g_config.tx_queue_len = 1024;  //<TWAI_GENERAL_CONFIG_DEFAULT default is 5, use this to increase if needed
+  g_config.rx_queue_len = 1024;  //<TWAI_GENERAL_CONFIG_DEFAULT default is 5, use this to increase if needed // 4096
   //g_config.intr_flags = ESP_INTR_FLAG_IRAM;
 
   //g_config.ss = 1; // single shot - todo
@@ -47,39 +47,12 @@ void setupIO() {
   }
 }
 
-void updateLED() {
-  if (state.mode == MODE_STOCK) {
-    state.mode = MODE_FWD;
-    strip.setLedColorData(led_channel, 0, led_brightness, 0);
-    strip.show();
-    return;
-  }
-  if (state.mode == MODE_FWD) {
-    state.mode = MODE_5050;
-    strip.setLedColorData(led_channel, 0, 0, led_brightness);
-    strip.show();
-    return;
-  }
-  if (state.mode == MODE_5050) {
-    state.mode = MODE_7525;
-    strip.setLedColorData(led_channel, 0, led_brightness, led_brightness);
-    strip.show();
-    return;
-  }
-  if (state.mode == MODE_7525) {
-    state.mode = MODE_STOCK;
-    strip.setLedColorData(led_channel, led_brightness, 0, 0);
-    strip.show();
-    return;
-  }
-}
-
 void setupTickers() {
-  tickUpdateLED.start();
   tickBroadcastOpenHaldex.start();
+  tickUpdateLabels.start();
   tickHaldexState.start();
-  tickEEP.start();   // begin ticker for the EEPROM
-  tickWiFi.start();  // begin ticker for the WiFi (to turn off after 60s)
+  tickEEP.start();  // begin ticker for the EEPROM
+  //tickWiFi.start();  // begin ticker for the WiFi (to turn off after 60s)
 
   if (isGen1Standalone) {
     Gen1_tickFrames10.start();
@@ -110,14 +83,14 @@ void setupTickers() {
 }
 
 void updateTickers() {
-  tickUpdateLED.update();
   tickHaldexState.update();
-  tickEEP.update();   // refresh the EEP ticker
-  tickWiFi.update();  // refresh the WiFi ticker
-  btnMode.tick();    // refresh the paddle up ticker
-  btnModeExt.tick();    // refresh the paddle up ticker
+  tickUpdateLabels.update();
+  tickEEP.update();  // refresh the EEP ticker
 
   if (broadcastOpenHaldexOverCAN) { tickBroadcastOpenHaldex.update(); }
+
+  btnMode.tick();     // refresh the paddle up ticker
+  btnModeExt.tick();  // refresh the paddle up ticker
 
   if (isGen1Standalone) {
     Gen1_tickFrames10.update();
@@ -158,6 +131,12 @@ void showHaldexState() {
     DEBUG("    couplingOpen: %d", received_coupling_open);    // clutch fully disengaged
     DEBUG("    speedLimit: %d", received_speed_limit);        // hit a speed limit...
     DEBUG("    tempCounter2: %d", rxtxcount);                 // incrememting value for checking the response to vars...
+
+    DEBUG("    hasChassisCAN: %d", hasCANChassis);        // incrememting value for checking the response to vars...
+    DEBUG("    hasHaldexCAN: %d", hasCANHaldex);          // incrememting value for checking the response to vars...
+    DEBUG("    lastCANChassis: %d", (lastCANChassis));    // incrememting value for checking the response to vars...
+    DEBUG("    lastHaldexChassis: %d", (lastCANHaldex));  // incrememting value for checking the response to vars...
+
     if (isBusFailure) {
       DEBUG("    Bus Failure: True");
     }
@@ -168,13 +147,12 @@ void showHaldexState() {
     twai_read_alerts(&alerts_triggered, pdMS_TO_TICKS(0));
     twai_status_info_t twaistatus;
     twai_get_status_info(&twaistatus);
-    DEBUG("    CAN-BUS Details:");  // this is the lock %
+    DEBUG("");  // this is the lock %
+    DEBUG("CAN-BUS Details:");  // this is the lock %
     //Serial.printf("TX buffered: %lu\t", twaistatus.msgs_to_tx);
     DEBUG("    RX buffered: %lu\t", twaistatus.msgs_to_rx);
     DEBUG("    RX missed: %lu\t", twaistatus.rx_missed_count);
     DEBUG("    RX overrun %lu\n", twaistatus.rx_overrun_count);
-    DEBUG("    %d", stackCHS);
-    DEBUG("    %d", stackHDX);
 
     if (alerts_triggered & TWAI_ALERT_BUS_OFF) {
       DEBUG("    Bus Off: True");  // incrememting value for checking the response to vars...

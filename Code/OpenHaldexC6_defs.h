@@ -13,7 +13,7 @@
 #include <WiFi.h>         // included for WiFi pages
 #include <ESPmDNS.h>      // included for WiFi pages
 #include <ButtonLib.h>    // included for paddles
-#include "TickTwo.h"  // for repeated tasks
+#include "TickTwo.h"      // for repeated tasks
 #include <OpenHaldexC6_canID.h>
 
 #define enableDebug 1
@@ -21,8 +21,8 @@
 #define detailedDebugCAN 1
 #define detailedDebugWiFi 1
 
-#define eepRefresh 2000       // EEPROM save in ms
-#define wifiDisable 60000     // turn off WiFi in ms - check for 0 connections after 60s and disable WiFi - burning power otherwise
+#define eepRefresh 2000    // EEPROM save in ms
+#define wifiDisable 60000  // turn off WiFi in ms - check for 0 connections after 60s and disable WiFi - burning power otherwise
 
 // Debugging macros
 #ifdef enableDebug
@@ -47,18 +47,17 @@
 #define gpio_mode 19     // gpio mode button internal
 #define gpio_mode_ext 0  // gpio mode button external
 
-#define EXAMPLE_TAG "TWAI v2"
 #define wifiHostName "OpenHaldex-C6"  // the WiFi name
 
 // setup - main inputs
-bool isMPH = false;                   // 0 = kph, 1 = mph
+bool isMPH = false;       // 0 = kph, 1 = mph
 #define mphFactor 621371  // to convert from kmh > mph
 
-twai_message_t rx_message_hdx; // incoming haldex message
-twai_message_t rx_message_chs; // incoming chassis message
- 
-twai_message_t tx_message_hdx; // outgoing haldex message
-twai_message_t tx_message_chs; // outgoing chassis message
+twai_message_t rx_message_hdx;  // incoming haldex message
+twai_message_t rx_message_chs;  // incoming chassis message
+
+twai_message_t tx_message_hdx;  // outgoing haldex message
+twai_message_t tx_message_chs;  // outgoing chassis message
 
 void updateLED();
 
@@ -107,21 +106,18 @@ float received_pedal_value;
 uint8_t received_vehicle_speed;
 uint8_t haldexGeneration = 4;
 
-bool ledRed = true;
-bool ledGreen = false;
-bool ledBlue = false;
-
 bool isGen1Standalone = false;
 bool isGen2Standalone = false;
 bool isGen4Standalone = false;
 
-bool hasDiag = false;
-
 bool isBusFailure = false;
-
+bool hasCANChassis = false;
+bool hasCANHaldex = false;
 bool broadcastOpenHaldexOverCAN = true;
 
 uint32_t alerts_to_enable = 0;
+uint16_t lastCANChassis = 0;
+uint16_t lastCANHaldex = 0;
 
 enum openhaldex_mode_t {
   MODE_STOCK,
@@ -208,7 +204,7 @@ uint8_t mLW_1_crc = 0;
 
 uint8_t mDiagnose_1_counter = 0;
 
-const uint8_t lws_1[16][8] = {
+/*const uint8_t lws_1[16][8] = {
   { 0x88, 0x00, 0x00, 0x00, 0x80, 0x00, 0xA3, 0x77 },
   { 0x88, 0x00, 0x00, 0x00, 0x80, 0x10, 0x86, 0x67 },
   { 0x88, 0x00, 0x00, 0x00, 0x80, 0x20, 0xE9, 0x57 },
@@ -226,7 +222,7 @@ const uint8_t lws_1[16][8] = {
   { 0x88, 0x00, 0x00, 0x00, 0x80, 0xE0, 0x7A, 0x97 },
   { 0x88, 0x00, 0x00, 0x00, 0x80, 0xF0, 0x5F, 0x87 }
   // ... add as many as you have; 16 fills the LUT fully
-};
+};*/
 const uint8_t lws_2[16][8] = {
   { 0x22, 0x00, 0x00, 0x00, 0x80, 0x00, 0xA0, 0xDD },
   { 0x22, 0x00, 0x00, 0x00, 0x80, 0x10, 0x85, 0xCD },
@@ -255,23 +251,12 @@ extern void writeEEP();
 extern void connectWifi();
 extern void disconnectWifi();
 extern void setupUI();
-extern void textCallback(Control *sender, int type);
 extern void generalCallback(Control *sender, int type);
-extern void selectCallback(Control *sender, int type);
-extern void updateCallback(Control *sender, int type);
-extern void getTimeCallback(Control *sender, int type);
-extern void graphAddCallback(Control *sender, int type);
-extern void graphClearCallback(Control *sender, int type);
-extern void randomString(char *buf, int len);
 extern void extendedCallback(Control *sender, int type, void *param);
 extern void updateLabels();
 
 // WiFi UI handles
-uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed,int16_haldexGeneration;
+uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed, int16_haldexGeneration;
 uint16_t bool_broadcastHaldex, bool_disableControl, bool_followHandbrake, bool_followBrakeSwitch, bool_isStandalone;
 
-int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_haldexState, label_haldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_currentSpeed, label_currentRPM, label_currentBoost;
-
-uint16_t graph;
-uint16_t mainTime;
-volatile bool updates = false;
+int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_HaldexState, label_HaldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_HaldexCoupling, label_HaldexSpeedLimit, label_currentSpeed, label_currentRPM, label_currentBoost;

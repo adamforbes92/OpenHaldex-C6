@@ -19,13 +19,13 @@ uint32_t stackHDX = 0;
 Preferences pref;
 
 Freenove_ESP32_WS2812 strip = Freenove_ESP32_WS2812(1, led_gpio, led_channel, TYPE_RGB);  // 1 led, gpio pin, channel, type of LED
-TickTwo tickUpdateLED(updateLED, 8000);                                                   // timer for updating LED colour (in 'IO.ino')
 TickTwo tickBroadcastOpenHaldex(broadcastOpenHaldex, 200);                                // timer for broadcasting speed over CAN.  Adjustable in '_can.ino' for address to broadcast to
 TickTwo tickHaldexState(showHaldexState, 1000);                                           // timer for updating Serial Monitor / General Feedback
-TickTwo tickEEP(writeEEP, eepRefresh);           // timer to update/save current EEP values
-TickTwo tickWiFi(disconnectWifi, wifiDisable);   // timer for disconnecting wifi after 30s if no connections - saves power
-buttonClass btnMode(gpio_mode, 0, true);
-buttonClass btnModeExt(gpio_mode_ext, 0, true);
+TickTwo tickEEP(writeEEP, eepRefresh);                                                    // timer to update/save current EEP values
+//TickTwo tickWiFi(disconnectWifi, wifiDisable);                                            // timer for disconnecting wifi after 30s if no connections - saves power
+TickTwo tickUpdateLabels(updateLabels, 200);  // timer for broadcasting speed over CAN.  Adjustable in '_can.ino' for address to broadcast to
+buttonClass btnMode(gpio_mode, 0, true); // timer for internal mode button
+buttonClass btnModeExt(gpio_mode_ext, 0, true); // timer for external mode button
 
 // Gen 1 Standalone Frames Timers:
 TickTwo Gen1_tickFrames10(Gen1_frames10, 10);        // timer broadcasting speed over CAN.  Adjustable in '_can.ino' for address to broadcat to
@@ -53,36 +53,53 @@ TickTwo Gen4_tickFrames1000(Gen4_frames1000, 1000);  // timer broadcasting speed
 
 void setup() {
 #if enableDebug || detailedDebug || detailedDebugCAN
-  Serial.begin(115200);
+  Serial.begin(500000);
 #endif
   DEBUG("OpenHaldex-C6");
 
   setupIO();
   setupTickers();
 
-  connectWifi();                       // enable / start WiFi
-  setupUI();                           // setup wifi user interface
+  connectWifi();  // enable / start WiFi
+  setupUI();      // setup wifi user interface
 
   xTaskCreate(parseCAN_chs, "parseChassis", 2048, NULL, 5, NULL);  // create a task for FreeRTOS for incoming chassis CAN
   xTaskCreate(parseCAN_hdx, "parseHaldex", 2048, NULL, 4, NULL);   // create a task for FreeRTOS for incoming haldex CAN
 }
 
 void loop() {
-  //updateWiFi();  // parse WiFi
   //parseTriggers(); // buttons / external mode change /
-
   updateTickers();
+
   uint32_t alerts_triggered;
   twai_read_alerts(&alerts_triggered, pdMS_TO_TICKS(0));
   twai_status_info_t twaistatus;
   twai_get_status_info(&twaistatus);
-  if (alerts_triggered & TWAI_ALERT_BUS_OFF) {
+  if (alerts_triggered & TWAI_ALERT_ERR_ACTIVE) {
+    isBusFailure = true;
+  }
+  if (alerts_triggered & TWAI_ALERT_RECOVERY_IN_PROGRESS) {
+    isBusFailure = true;
+  }
+  if (alerts_triggered & TWAI_ALERT_ABOVE_ERR_WARN) {
     isBusFailure = true;
   }
   if (alerts_triggered & TWAI_ALERT_BUS_ERROR) {
     isBusFailure = true;
   }
+  if (alerts_triggered & TWAI_ALERT_TX_FAILED) {
+    isBusFailure = true;
+  }
   if (alerts_triggered & TWAI_ALERT_RX_QUEUE_FULL) {
+    isBusFailure = true;
+  }
+  if (alerts_triggered & TWAI_ALERT_ERR_PASS) {
+    isBusFailure = true;
+  }
+  if (alerts_triggered & TWAI_ALERT_BUS_OFF) {
+    isBusFailure = true;
+  }
+  if (alerts_triggered & TWAI_ALERT_RX_FIFO_OVERRUN) {
     isBusFailure = true;
   }
 }
