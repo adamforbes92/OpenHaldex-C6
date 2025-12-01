@@ -3,30 +3,56 @@ void Gen1_frames10() {  // n/a
 
 void Gen1_frames20() {
   twai_message_t frame;
-  frame.identifier = MOTOR1_ID;  // 0x1A0
-  frame.data_length_code = 8;    // DLC 8
-  frame.data[0] = 0x00;          // ASR 0x04 sets bit 4.  0x08 removes set.  Coupling open/closed
-  frame.data[1] = 0xFE;          // can use to disable (>130 dec).  Was 0x00; 0x41?  0x43?
-  frame.data[2] = 0x21;          // was 0x00 no effect
-  frame.data[3] = 0x4E;          // was 0xFE no effect
-  frame.data[4] = 0x00;          // was 0xFE miasrl no effect
-  frame.data[5] = 0x00;          // was 0xFE miasrs no effect
-  frame.data[6] = 0x16;          // was 0x00
-  frame.data[7] = 0x00;          // checksum
+  frame.identifier = MOTOR1_ID;                                 // 0x1A0
+  frame.data_length_code = 8;                                   // DLC 8
+  frame.data[0] = 0x00;                                         // various individual bits ('space gas', driving pedal, kick down, clutch, timeout brake, brake intervention, drinks-torque intervention?) was 0x01 - ignored
+  frame.data[1] = get_lock_target_adjusted_value(0xFE, false);  // inner engine moment (%): 0.39*(0xF0 / 250) = 97.5% (93.6% <> 0xf0) - used - from 0x00>0xFE adds 30%
+  frame.data[2] = 0x21;                                         // motor speed (rpm): 32 > (low byte) - ignored
+  frame.data[3] = get_lock_target_adjusted_value(0x4E, false);  // motor speed (rpm): 78 > (high byte) : 0.25 * (78 32) = 1,958 RPM (was 0x4e)  Runs pre-charge pump if >0 has a good impact on lock.  Used
+  frame.data[4] = get_lock_target_adjusted_value(0xFE, false);  // inner moment (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
+  frame.data[5] = get_lock_target_adjusted_value(0xFE, false);  // driving pedal (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
+  // rx_message_chs.data[6] = get_lock_target_adjusted_value(0x16, false);  // set to a low value to control the req. transfer torque.  Main control value for Gen1
+
+  switch (state.mode) {
+    case MODE_FWD:
+      appliedTorque = get_lock_target_adjusted_value(0xFE, true);  // return 0xFE to disable
+      break;
+    case MODE_5050:
+      appliedTorque = get_lock_target_adjusted_value(0x16, false);  // return 0x16 to fully lock
+      break;
+    case MODE_7525:
+      appliedTorque = get_lock_target_adjusted_value(0x50, false);  // set to ~30% lock (0x96 = 15%) (0x96 = 15%, 0x56 = 27%)
+      break;
+  }
+
+  frame.data[6] = appliedTorque;  // was 0x00
+  frame.data[7] = 0x00;           // drivers moment (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
   twai_transmit_v2(twai_bus_1, &frame, 0);
 
-  frame.identifier = BRAKES1_ID;    // 0x1A0
-  frame.data_length_code = 8;       // DLC 8
-  frame.data[0] = 0x80;             // ASR 0x04 sets bit 4.  0x08 removes set.  Coupling open/closed
-  frame.data[1] = 0x00;             // can use to disable (>130 dec).  Was 0x00; 0x41?  0x43?
-  frame.data[2] = 0x00;             // was 0x00 no effect
-  frame.data[3] = 0x0A;             // was 0xFE no effect
-  frame.data[4] = 0xFE;             // was 0xFE miasrl no effect
-  frame.data[5] = 0xFE;             // was 0xFE miasrs no effect
-  frame.data[6] = 0x00;             // was 0x00
-  frame.data[7] = BRAKES1_counter;  // checksum
-  if (++BRAKES1_counter > 0xF) {    // 0xF
-    BRAKES1_counter = 0;            // 0
+  frame.identifier = MOTOR3_ID;  // 0x1A0
+  frame.data_length_code = 8;    // DLC 8
+  frame.data[0] = 0x00;          // various individual bits ('motor has been launched, only in diesel') - ignored
+  frame.data[1] = 0x50;          // outdoor temperature - ignored
+  frame.data[2] = 0x00;          // pedal - ignored
+  frame.data[3] = 0x00;          // wheel command torque (low byte).  If SY_ASG - ignored
+  frame.data[4] = 0x00;          // wheel command torque (high byte).  If SY_ASG - ignored
+  frame.data[5] = 0x00;          // wheel command torque (0 = positive, 1 = negative).  If SY_ASG - ignored
+  frame.data[6] = 0x00;          // req. torque.  If SY_ASG - ignored
+  frame.data[7] = 0xFE;          // throttle angle (100%), ignored
+  twai_transmit_v2(twai_bus_1, &frame, 0);
+
+  frame.identifier = BRAKES1_ID;                                // 0x1A0
+  frame.data_length_code = 8;                                   // DLC 8
+  frame.data[0] = 0x80;                                         // asr req
+  frame.data[1] = get_lock_target_adjusted_value(0x00, false);  // also controlling slippage.  Brake force can add 20%
+  frame.data[2] = 0x00;                                         //  ignored
+  frame.data[3] = 0x0A;                                         // 0xA ignored?
+  frame.data[4] = 0xFE;                                         // ignored
+  frame.data[5] = 0xFE;                                         // ignored
+  frame.data[6] = 0x00;                                         // ignored
+  frame.data[7] = BRAKES1_counter;                              // checksum
+  if (++BRAKES1_counter > 0xF) {                                // 0xF
+    BRAKES1_counter = 0;                                        // 0
   }
   twai_transmit_v2(twai_bus_1, &frame, 0);
 
@@ -35,16 +61,16 @@ void Gen1_frames20() {
   too high a speed causes 'pulsing'
   slip control changes from 0 to 1 IF rear > front
   */
-  frame.identifier = BRAKES3_ID;  // 0x4A0 - deviation between front/rear = block 011 'rpm'
-  frame.data_length_code = 8;     // DLC 8
-  frame.data[0] = 0xFE;           // front left low
-  frame.data[1] = 0x0A;           // front left high
-  frame.data[2] = 0xFE;           // front right low
-  frame.data[3] = 0x0A;           // front right high
-  frame.data[4] = 0x00;           // rear left low
-  frame.data[5] = 0x0A;           // rear left high
-  frame.data[6] = 0x00;           // rear right low
-  frame.data[7] = 0x0A;           // rear right high
+  frame.identifier = BRAKES3_ID;                                // 0x4A0 - deviation between front/rear = block 011 'rpm'
+  frame.data_length_code = 8;                                   // DLC 8
+  frame.data[0] = get_lock_target_adjusted_value(0xFE, false);  // low byte, LEFT Front // affects slightly +2
+  frame.data[1] = 0x0A;                                         // high byte, LEFT Front big effect
+  frame.data[2] = get_lock_target_adjusted_value(0xFE, false);  // low byte, RIGHT Front// affects slightly +2
+  frame.data[3] = 0x0A;                                         // front right high
+  frame.data[4] = 0x00;                                         // low byte, LEFT Rear
+  frame.data[5] = 0x0A;                                         // high byte, LEFT Rear // 254+10? (5050 returns 0xA)
+  frame.data[6] = 0x00;                                         // low byte, RIGHT Rear
+  frame.data[7] = 0x0A;                                         // high byte, RIGHT Rear  // 254+10?
   twai_transmit_v2(twai_bus_1, &frame, 0);
 }
 
@@ -77,16 +103,16 @@ void Gen2_frames10() {
   }
   twai_transmit_v2(twai_bus_1, &frame, 0);
 
-  frame.identifier = BRAKES2_ID;    // 0x1A0
-  frame.data_length_code = 8;       // DLC 8
-  frame.data[0] = 0x7F;             // ASR 0x04 sets bit 4.  0x08 removes set.  Coupling open/closed
-  frame.data[1] = 0xAE;             // can use to disable (>130 dec).  Was 0x00; 0x41?  0x43?
-  frame.data[2] = 0x3D;             // was 0x00 no effect
-  frame.data[3] = BRAKES2_counter;  // was 0xFE no effect
-  frame.data[4] = 0x7F;             // was 0xFE miasrl no effect
-  frame.data[5] = 0xFE;             // was 0xFE miasrs no effect
-  frame.data[6] = 0x5E;             // was 0x00
-  frame.data[7] = 0x2B;             // checksum
+  frame.identifier = BRAKES2_ID;                                // 0x1A0
+  frame.data_length_code = 8;                                   // DLC 8
+  frame.data[0] = 0x7F;                                         // ASR 0x04 sets bit 4.  0x08 removes set.  Coupling open/closed
+  frame.data[1] = 0xAE;                                         // can use to disable (>130 dec).  Was 0x00; 0x41?  0x43?
+  frame.data[2] = 0x3D;                                         // was 0x00 no effect
+  frame.data[3] = BRAKES2_counter;                              // was 0xFE no effect
+  frame.data[4] = get_lock_target_adjusted_value(0x7F, false);  // was 0xFE miasrl no effect
+  frame.data[5] = get_lock_target_adjusted_value(0xFE, false);  // was 0xFE miasrs no effect
+  frame.data[6] = 0x5E;                                         // was 0x00
+  frame.data[7] = 0x2B;                                         // checksum
   BRAKES2_counter = BRAKES2_counter + 10;
   if (BRAKES2_counter > 0xF7) {
     BRAKES2_counter = 7;
@@ -98,16 +124,16 @@ void Gen2_frames10() {
   too high a speed causes 'pulsing'
   slip control changes from 0 to 1 IF rear > front
   */
-  frame.identifier = BRAKES3_ID;  // 0x4A0 - deviation between front/rear = block 011 'rpm'
-  frame.data_length_code = 8;     // DLC 8
-  frame.data[0] = 0xFE;           // front left low
-  frame.data[1] = 0x0A;           // front left high
-  frame.data[2] = 0xFE;           // front right low
-  frame.data[3] = 0x0A;           // front right high
-  frame.data[4] = 0x00;           // rear left low
-  frame.data[5] = 0x0A;           // rear left high
-  frame.data[6] = 0x00;           // rear right low
-  frame.data[7] = 0x0A;           // rear right high
+  frame.identifier = BRAKES3_ID;                                // 0x4A0 - deviation between front/rear = block 011 'rpm'
+  frame.data_length_code = 8;                                   // DLC 8
+  frame.data[0] = get_lock_target_adjusted_value(0xFE, false);  // front left low
+  frame.data[1] = 0x0A;                                         // front left high
+  frame.data[2] = get_lock_target_adjusted_value(0xFE, false);  // front right low
+  frame.data[3] = 0x0A;                                         // front right high
+  frame.data[4] = 0x00;                                         // rear left low
+  frame.data[5] = 0x0A;                                         // rear left high
+  frame.data[6] = 0x00;                                         // rear right low
+  frame.data[7] = 0x0A;                                         // rear right high
   twai_transmit_v2(twai_bus_1, &frame, 0);
 
   frame.identifier = BRAKES4_ID;    // 0x2A0 includes coupling moment? Affects vehicle mode(!) do not have!
@@ -128,9 +154,9 @@ void Gen2_frames10() {
 
   frame.identifier = BRAKES5_ID;     // 0x2A0 includes coupling moment? Affects vehicle mode(!) do not have!
   frame.data_length_code = 8;        // DLC 8 (/4)
-  frame.data[0] = 0x00;              // affects estimated torque AND vehicle mode(!)
-  frame.data[1] = 0x00;              //
-  frame.data[2] = 0x00;              //
+  frame.data[0] = 0xFE;              // affects estimated torque AND vehicle mode(!)
+  frame.data[1] = 0x7F;              //
+  frame.data[2] = 0x03;              //
   frame.data[3] = 0x00;              // 32605
   frame.data[4] = 0x00;              //
   frame.data[5] = 0x00;              //
@@ -166,18 +192,6 @@ void Gen2_frames10() {
     BRAKES9_counter2 = 0x00;
   }
 
-  frame.identifier = MOTOR1_ID;  // 0x280 - needs this
-  frame.data_length_code = 8;
-  frame.data[0] = 0x01;  // various bits no effect 0x08
-  frame.data[1] = 0xFE;  // MDNORM no effect x
-  frame.data[2] = 0x20;  // RPM low byte no effect was 0x20
-  frame.data[3] = 0x4E;  // RPM high byte.  Will disable pre-charge pump if 0x00.  Sets raw = 8, coupling open
-  frame.data[4] = 0xFE;  // MDNORM no effect
-  frame.data[5] = 0xFE;  // Pedal no effect
-  frame.data[6] = 0x20;  // idle adaptation?  Was slippage?
-  frame.data[7] = 0xFE;  // Fahrerwunschmoment req. torque?
-  twai_transmit_v2(twai_bus_1, &frame, 0);
-
   frame.identifier = mLW_1;  // electronic power steering 0x0C2
   frame.extd = 0;
   frame.rtr = 0;
@@ -201,16 +215,16 @@ void Gen2_frames10() {
 
 void Gen2_frames20() {
   twai_message_t frame;
-  frame.identifier = MOTOR1_ID;  // 0x5A0
-  frame.data_length_code = 8;    // DLC 8
-  frame.data[0] = 0x08;          // various bits // was 7E
-  frame.data[1] = 0xFA;          // outside temp no effect
-  frame.data[2] = 0x20;          // Pedal no effect
-  frame.data[3] = 0x4E;          // checksum changing
-  frame.data[4] = 0xFA;          // big affect(!) 0x7F is max
-  frame.data[5] = 0xFA;          // no effect.  Was 0x6E
-  frame.data[6] = 0x20;          // no effect.  Was 0x70 - can cause 'Operating Mode Malfunction'(!) Includes Emergency Mode and Control Module Error
-  frame.data[7] = 0xFA;          // no effect.  gen1 is FE, Gen4 is 01 was AB - can cause 'Operating Mode Malfunction'(!)
+  frame.identifier = MOTOR1_ID;                                 // 0x5A0
+  frame.data_length_code = 8;                                   // DLC 8
+  frame.data[0] = 0x08;                                         // various bits // was 7E
+  frame.data[1] = 0xFA;                                         // outside temp no effect
+  frame.data[2] = 0x20;                                         // Pedal no effect
+  frame.data[3] = get_lock_target_adjusted_value(0x4E, false);  // checksum changing
+  frame.data[4] = 0xFA;                                         // big affect(!) 0x7F is max
+  frame.data[5] = 0xFA;                                         // no effect.  Was 0x6E
+  frame.data[6] = get_lock_target_adjusted_value(0x20, false);  // no effect.  Was 0x70 - can cause 'Operating Mode Malfunction'(!) Includes Emergency Mode and Control Module Error
+  frame.data[7] = 0xFA;                                         // no effect.  gen1 is FE, Gen4 is 01 was AB - can cause 'Operating Mode Malfunction'(!)
   twai_transmit_v2(twai_bus_1, &frame, 0);
 
   frame.identifier = MOTOR2_ID;  // 0x5A0
@@ -389,16 +403,16 @@ void Gen4_frames10() {
 
 void Gen4_frames20() {
   twai_message_t frame;
-  frame.identifier = BRAKES2_ID;    // 0x5A0
-  frame.data_length_code = 8;       // DLC 8
-  frame.data[0] = 0x80;             // various bits // was 7E
-  frame.data[1] = 0x7A;             // outside temp no effect
-  frame.data[2] = 0x05;             // Pedal no effect
-  frame.data[3] = BRAKES2_counter;  // checksum changing
-  frame.data[4] = get_lock_target_adjusted_value(0x7F, false);             // big affect(!) 0x7F is max
-  frame.data[5] = 0xCA;             // no effect.  Was 0x6E
-  frame.data[6] = 0x1B;             // no effect.  Was 0x70 - can cause 'Operating Mode Malfunction'(!) Includes Emergency Mode and Control Module Error
-  frame.data[7] = 0xAB;             // no effect.  gen1 is FE, Gen4 is 01 was AB - can cause 'Operating Mode Malfunction'(!)
+  frame.identifier = BRAKES2_ID;                                // 0x5A0
+  frame.data_length_code = 8;                                   // DLC 8
+  frame.data[0] = 0x80;                                         // various bits // was 7E
+  frame.data[1] = 0x7A;                                         // outside temp no effect
+  frame.data[2] = 0x05;                                         // Pedal no effect
+  frame.data[3] = BRAKES2_counter;                              // checksum changing
+  frame.data[4] = get_lock_target_adjusted_value(0x7F, false);  // big affect(!) 0x7F is max
+  frame.data[5] = 0xCA;                                         // no effect.  Was 0x6E
+  frame.data[6] = 0x1B;                                         // no effect.  Was 0x70 - can cause 'Operating Mode Malfunction'(!) Includes Emergency Mode and Control Module Error
+  frame.data[7] = 0xAB;                                         // no effect.  gen1 is FE, Gen4 is 01 was AB - can cause 'Operating Mode Malfunction'(!)
   twai_transmit_v2(twai_bus_1, &frame, 0);
   BRAKES2_counter = BRAKES2_counter + 16;
   if (BRAKES2_counter > 0xF0) {

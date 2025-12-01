@@ -1,3 +1,4 @@
+// general ESP activities
 #include <stdio.h>
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
@@ -7,24 +8,36 @@
 #include "esp_log.h"
 #include "driver/twai.h"
 #include "driver/gpio.h"
-#include "Freenove_WS2812_Lib_for_ESP32.h"
-#include <Preferences.h>  // for eeprom/remember settings
-#include <ESPUI.h>        // included for WiFi pages
-#include <WiFi.h>         // included for WiFi pages
-#include <ESPmDNS.h>      // included for WiFi pages
-#include <ButtonLib.h>    // included for paddles
-#include "TickTwo.h"      // for repeated tasks
+
+// for CAN IDs - to make code easier
 #include <OpenHaldexC6_canID.h>
 
-#define enableDebug 1
-#define detailedDebug 1
-#define detailedDebugCAN 1
-#define detailedDebugWiFi 1
+#include "Freenove_WS2812_Lib_for_ESP32.h"  // for RGB LED
+#include <Preferences.h>                    // for eeprom/remember settings
 
-#define eepRefresh 2000    // EEPROM save in ms
-#define wifiDisable 60000  // turn off WiFi in ms - check for 0 connections after 60s and disable WiFi - burning power otherwise
+#include <ESPUI.h>    // included for WiFi pages
+#include <WiFi.h>     // included for WiFi pages
+#include <ESPmDNS.h>  // included for WiFi pages
 
-// Debugging macros
+#include "InterruptButton.h"  // for mode button (internal & external)
+
+// debug options
+#define enableDebug 0
+#define detailedDebug 0
+#define detailedDebugStack 0
+#define detailedDebugRuntimeStats 0
+#define detailedDebugCAN 0
+#define detailedDebugWiFi 0
+#define detailedDebugEEP 0
+
+// refresh rates
+#define eepRefresh 2000            // EEPROM save in ms
+#define broadcastRefresh 200       // broadcast refresh rate in ms
+#define serialMonitorRefresh 1000  // Serial Monitor refresh rate in ms
+#define labelRefresh 500           // broadcast refresh rate in ms
+#define updateTriggersRefresh 500
+
+// debugging macros
 #ifdef enableDebug
 #define DEBUG(x, ...) Serial.printf(x "\n", ##__VA_ARGS__)
 #define DEBUG_(x, ...) Serial.printf(x, ##__VA_ARGS__)
@@ -33,6 +46,19 @@
 #define DEBUG_(x, ...)
 #endif
 
+// helpers to format a number as a binary string for printf
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte) \
+  ((byte)&0x80 ? '1' : '0'), \
+    ((byte)&0x40 ? '1' : '0'), \
+    ((byte)&0x20 ? '1' : '0'), \
+    ((byte)&0x10 ? '1' : '0'), \
+    ((byte)&0x08 ? '1' : '0'), \
+    ((byte)&0x04 ? '1' : '0'), \
+    ((byte)&0x02 ? '1' : '0'), \
+    ((byte)&0x01 ? '1' : '0')
+
+// GPIO
 #define CAN0_RS 2   // can_0 slope control
 #define CAN0_RX 23  // can_0 rx
 #define CAN0_TX 3   // can_0 tx
@@ -40,18 +66,24 @@
 #define CAN1_RX 20  // can_1 tx
 #define CAN1_TX 21  // can_1 rx
 
-#define led_gpio 8          // gpio for led
+#define gpio_led 8        // gpio for led
+#define gpio_mode 19      // gpio mode button internal
+#define gpio_mode_ext 18  // gpio mode button external
+
+#define gpio_hb_in 14     // gpio for handbrake signal in
+#define gpio_hb_out 15    // gpio for handbrake signal out
+#define gpio_brake_in 0   // gpio for brake signal in
+#define gpio_brake_out 1  // gpio for brake signal out
+
+// led settings
 #define led_channel 0       // channel for led
 #define led_brightness 255  // default brightness
 
-#define gpio_mode 19     // gpio mode button internal
-#define gpio_mode_ext 0  // gpio mode button external
-
+// wifi settings
 #define wifiHostName "OpenHaldex-C6"  // the WiFi name
 
-// setup - main inputs
-bool isMPH = false;       // 0 = kph, 1 = mph
-#define mphFactor 621371  // to convert from kmh > mph
+static twai_handle_t twai_bus_0;  // for ESP32 C6 CANBUS 0
+static twai_handle_t twai_bus_1;  // for ESP32 C6 CANBUS 1
 
 twai_message_t rx_message_hdx;  // incoming haldex message
 twai_message_t rx_message_chs;  // incoming chassis message
@@ -59,42 +91,59 @@ twai_message_t rx_message_chs;  // incoming chassis message
 twai_message_t tx_message_hdx;  // outgoing haldex message
 twai_message_t tx_message_chs;  // outgoing chassis message
 
-void updateLED();
+TaskHandle_t handle_frames1000;  // for enabling/disabling 1000ms frames
+TaskHandle_t handle_frames200;   // for enabling/disabling 200ms frames
+TaskHandle_t handle_frames100;   // for enabling/disabling 100ms frames
+TaskHandle_t handle_frames25;    // for enabling/disabling 25ms frames
+TaskHandle_t handle_frames20;    // for enabling/disabling 20ms frames
+TaskHandle_t handle_frames10;    // for enabling/disabling 10ms frames
 
-void Gen1_frames10();
-void Gen1_frames20();
-void Gen1_frames25();
-void Gen1_frames100();
-void Gen1_frames200();
-void Gen1_frames1000();
+// setup - main inputs
+bool isMPH = false;       // 0 = kph, 1 = mph
+#define mphFactor 621371  // to convert from kmh > mph
 
-void Gen2_frames10();
-void Gen2_frames20();
-void Gen2_frames25();
-void Gen2_frames100();
-void Gen2_frames200();
-void Gen2_frames1000();
-
-void Gen4_frames10();
-void Gen4_frames20();
-void Gen4_frames25();
-void Gen4_frames100();
-void Gen4_frames200();
-void Gen4_frames1000();
+// functions
+void frames10();
+void frames20();
+void frames25();
+void frames100();
+void frames200();
+void frames1000();
 
 void parseCAN_chs();
 void parseCAN_hdx();
 void broadcastOpenHaldex();
 void showHaldexState();
 
-void setupTickers();
-void updateTickers();
+void setupButtons();
+void setupCAN();
+void setupTasks();
 
-void get_lock_data(twai_message_t &rx_message_chs);
+void updateTriggers();
+void modeChange();
+void modeChangeExt();
+
+extern void getLockData(twai_message_t &rx_message_chs);
+extern uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert);
+
+// for EEP
+extern void readEEP();
+extern void writeEEP();
+
+// for WiFi Function Prototypes
+extern void connectWifi();
+extern void disconnectWifi();
+extern void setupUI();
+extern void generalCallback(Control *sender, int type);
+extern void extendedCallback(Control *sender, int type, void *param);
+extern void updateLabels();
 
 // Values received from Haldex CAN
 uint8_t received_haldex_state;
+uint8_t received_haldex_engagement_raw;
 uint8_t received_haldex_engagement;
+uint8_t appliedTorque;
+
 bool received_report_clutch1;
 bool received_report_clutch2;
 bool received_temp_protection;
@@ -103,21 +152,51 @@ bool received_speed_limit;
 
 // values received from Chassis CAN
 float received_pedal_value;
-uint8_t received_vehicle_speed;
-uint8_t haldexGeneration = 4;
+uint16_t received_vehicle_speed;
+uint16_t received_vehicle_rpm;
+uint16_t received_vehicle_boost;
+uint8_t haldexGeneration;
 
+bool isStandalone = false;
 bool isGen1Standalone = false;
 bool isGen2Standalone = false;
+bool isGen3Standalone = false;
 bool isGen4Standalone = false;
+bool isGen5Standalone = false;
 
 bool isBusFailure = false;
 bool hasCANChassis = false;
 bool hasCANHaldex = false;
 bool broadcastOpenHaldexOverCAN = true;
+bool disableController = false;
+bool followBrake = false;
+bool followHandbrake = false;
+bool otaUpdate = false;
 
 uint32_t alerts_to_enable = 0;
-uint16_t lastCANChassis = 0;
-uint16_t lastCANHaldex = 0;
+
+long lastCANChassisTick;
+long lastCANHaldexTick;
+
+uint8_t lastMode = 0;
+uint8_t disableThrottle = 0;
+uint8_t disableSpeed = 0;
+
+uint32_t rxtxcount = 0;  // frame counter
+uint32_t stackCHS = 0;
+uint32_t stackHDX = 0;
+
+uint32_t stackframes10 = 0;
+uint32_t stackframes20 = 0;
+uint32_t stackframes25 = 0;
+uint32_t stackframes100 = 0;
+uint32_t stackframes200 = 0;
+uint32_t stackframes1000 = 0;
+
+uint32_t stackbroadcastOpenHaldex = 0;
+uint32_t stackupdateLabels = 0;
+uint32_t stackshowHaldexState = 0;
+uint32_t stackwriteEEP = 0;
 
 enum openhaldex_mode_t {
   MODE_STOCK,
@@ -241,19 +320,6 @@ const uint8_t lws_2[16][8] = {
   { 0x22, 0x00, 0x00, 0x00, 0x80, 0xE0, 0x79, 0xFD },
   { 0x22, 0x00, 0x00, 0x00, 0x80, 0xF0, 0x5C, 0xED }
 };
-
-
-// for EEP
-extern void readEEP();
-extern void writeEEP();
-
-// for WiFi Function Prototypes
-extern void connectWifi();
-extern void disconnectWifi();
-extern void setupUI();
-extern void generalCallback(Control *sender, int type);
-extern void extendedCallback(Control *sender, int type, void *param);
-extern void updateLabels();
 
 // WiFi UI handles
 uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed, int16_haldexGeneration;

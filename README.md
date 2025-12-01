@@ -23,8 +23,10 @@ These modes are displayed as colours using the 5mm PCB LED: Red (Stock), Green (
 
 The modes can be toggled with the onboard 'Mode' button or changed via. WiFi.
 
+Disabling at low throttle inputs or high speed inputs are also configurable.
+
 ### WiFi Setup
-WiFi setup and configuration is always active.  Connect to 'OpenHaldexC6' by searching in WiFi devices and searching for 192.168.1.1 in a browser.  All settings are available.
+WiFi setup and configuration is always active.  Connect to 'OpenHaldexC6' by searching in WiFi devices and searching for 192.168.1.1 in a browser.  All settings are available for editing.  Should the WiFi page hang, a long press on the 'mode' button will reset the WiFi connection.
 
 ### Pinouts
 The MX23A12NF connector pinout is:
@@ -39,8 +41,6 @@ The MX23A12NF connector pinout is:
 > Pin 9: Brake Switch Out
 > Pin 10: Handbrake Switch In (+12v to activate)
 > Pin 11: Handbrake Switch Out
-
-The forked code has been tweaked to support the remote screen, standalone modes (so conversations/swaps into non-CANBUS) as well as Gen2 & Gen4 support.
 
 ### Uploading Code
 For users wishing to customise or edit the code, it is released here for free use.  Connect the Haldex controller via. a data USB-C cable (note some are ONLY power, so this needs to be checked).
@@ -61,8 +61,6 @@ Similarly, the enclosures are also here.
 The board supports broadcasting the Haldex output via. CAN - which allows pairing with the FIS controller to capture (and received) current and new modes.
 
 Flashing LED if there is an issue with writing CAN messages.
-
-Flashing LED to show installed Generation.
 
 Follow Brake/Handbrake signals (via. hard-wired signals).  The Haldex controller can 'pass-through' the brake/handbrake signals to enable/disable the controller or they can be ignored so that it is always active.
 

@@ -1,6 +1,117 @@
 void readEEP() {
+#if detailedDebugEEP
+  DEBUG("EEPROM initialising!");
+#endif
+
+  // use ESP32's 'Preferences' to remember settings.  Begin by opening the various types.  Use 'false' for read/write.  True just gives read access
+  pref.begin("broadcastOpen", false);
+  pref.begin("isStandalone", false);
+
+  pref.begin("disableControl", false);
+  pref.begin("followHandbrake", false);
+  pref.begin("followBrake", false);
+
+  pref.begin("haldexGen", false);
+  pref.begin("lastMode", false);
+  pref.begin("disableThrottle", false);
+  pref.begin("disableSpeed", false);
+  pref.begin("otaUpdate", false);
+
+  // first run comes with EEP valve of 255, so write actual values
+  if (pref.getUInt("haldexGeneration") == 255) {
+#if detailedDebugEEP
+    DEBUG("First run...");
+    //DEBUG(pref.getUInt("haldexGeneration"));
+#endif
+    pref.putBool("broadcastOpen", broadcastOpenHaldexOverCAN);
+    pref.putBool("isStandalone", isStandalone);
+
+    pref.putBool("disableControl", disableController);
+    pref.putBool("followHandbrake", followHandbrake);
+    pref.putBool("followBrake", followBrake);
+    pref.putBool("otaUpdate", otaUpdate);
+
+    pref.putUChar("haldexGen", haldexGeneration);
+    pref.putUChar("lastMode", lastMode);
+    pref.putUChar("disableThrottle", disableThrottle);
+    pref.putUShort("disableSpeed", disableSpeed);
+
+  } else {
+    broadcastOpenHaldexOverCAN = pref.getBool("broadcastOpen", false);
+    isStandalone = pref.getBool("isStandalone", false);
+    disableController = pref.getBool("disableControl", false);
+    followHandbrake = pref.getBool("followHandbrake", false);
+    followBrake = pref.getBool("followBrake", false);
+    otaUpdate = pref.getBool("otaUpdate", false);
+
+    haldexGeneration = pref.getUChar("haldexGen", 1);
+    lastMode = pref.getUChar("lastMode", 0);
+    disableThrottle = pref.getUChar("disableThrottle", 0);
+    state.pedal_threshold = disableThrottle;
+    disableSpeed = pref.getUShort("disableSpeed", 0);
+
+    switch (lastMode) {
+      case 0:
+        state.mode = MODE_STOCK;
+        break;
+      case 1:
+        state.mode = MODE_FWD;
+        break;
+      case 2:
+        state.mode = MODE_5050;
+        break;
+      case 3:
+        state.mode = MODE_7525;
+        break;
+    }
+  }
+#if detailedDebugEEP
+  DEBUG("EEPROM initialised with...");
+  DEBUG("    Broadcast OpenHaldex over CAN: %s", broadcastOpenHaldexOverCAN ? "true" : "false");
+  DEBUG("    Standalone mode: %s", isStandalone ? "true" : "false");
+  DEBUG("    Follow handbrake: %s", followHandbrake ? "true" : "false");
+  DEBUG("    Follow brake: %s", followBrake ? "true" : "false");
+  DEBUG("    Haldex Generation: %d", haldexGeneration);
+  DEBUG("    Last Mode: %d", lastMode);
+  DEBUG("    Disable Below Throttle: %d", disableThrottle);
+  DEBUG("    Disable Above Speed: %d", disableSpeed);
+  DEBUG("    System Update on Reboot: %d", otaUpdate);
+#endif
 }
 
-void writeEEP() {
+void writeEEP(void *arg) {
+  while (1) {
+    stackwriteEEP = uxTaskGetStackHighWaterMark(NULL);
 
+#if detailedDebugEEP
+    DEBUG("Writing EEPROM...");
+#endif
+
+    // update EEP only if changes have been made
+    pref.putBool("broadcastOpen", broadcastOpenHaldexOverCAN);
+    pref.putBool("isStandalone", isStandalone);
+    pref.putBool("disableControl", disableController);
+    pref.putBool("followHandbrake", followHandbrake);
+    pref.putBool("followBrake", followBrake);
+
+    pref.putUChar("haldexGen", haldexGeneration);
+    pref.putUChar("lastMode", lastMode);
+    pref.putUChar("disableThrottle", disableThrottle);
+
+    pref.putUShort("disableSpeed", disableSpeed);
+
+#if detailedDebugEEP
+    DEBUG("Written EEPROM with data:");
+    DEBUG("    Broadcast OpenHaldex over CAN: %s", broadcastOpenHaldexOverCAN ? "true" : "false");
+    DEBUG("    Standalone mode: %s", isStandalone ? "true" : "false");
+    DEBUG("    Follow handbrake: %s", followHandbrake ? "true" : "false");
+    DEBUG("    Follow brake: %s", followBrake ? "true" : "false");
+    DEBUG("    Haldex Generation: %d", haldexGeneration);
+    DEBUG("    Last Mode: %d", lastMode);
+    DEBUG("    Disable Below Throttle: %d", disableThrottle);
+    DEBUG("    Disable Above Speed: %d", disableSpeed);
+#endif
+
+    vTaskDelay(eepRefresh / portTICK_PERIOD_MS);
+  }
 }

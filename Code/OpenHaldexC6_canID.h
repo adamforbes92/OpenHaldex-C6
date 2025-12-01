@@ -1,4 +1,4 @@
-// define CAN Address to filter on.  Only looking for RPM, so no need to clog
+// all the CAN addresses in here.  Not all used, but worth keeping note of for future projects
 #define MOTOR1_ID 0x280
 #define MOTOR2_ID 0x288
 #define MOTOR3_ID 0x380
@@ -51,8 +51,8 @@
 #define mKombi_3 0x520
 
 // Custom CAN IDs
-#define OPENHALDEX_BROADCAST_ID 0x6B0
-#define OPENHALDEX_EXTERNAL_CONTROL_ID 0x6A0
+#define OPENHALDEX_BROADCAST_ID 0x6B0         // broadcast OpenHaldex via. CAN over this address - used for stating mode/performance etc
+#define OPENHALDEX_EXTERNAL_CONTROL_ID 0x6A0  // recieve OpenHaldex via. CAN over this address - used for changing modes etc
 
 #define diagnostics_1_ID 0x764
 #define diagnostics_2_ID 0x200

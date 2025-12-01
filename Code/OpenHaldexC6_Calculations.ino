@@ -6,20 +6,25 @@ float get_lock_target_adjustment() {
       return 0;
 
     case MODE_5050:
-      if (received_pedal_value >= state.pedal_threshold || state.pedal_threshold == 0 || state.mode_override) {
+      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
         return 100;
+      }
+      return 0;
+
+    case MODE_7525:
+      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
+        return 30;
       }
       return 0;
 
     default:
       return 0;
-      break;
   }
 
-  // Getting here means it's in not FWD or 5050.
+  // Getting here means it's in not FWD or 5050/7525.
 
   // Check if locking is necessary.
-  if (!(received_pedal_value >= state.pedal_threshold || state.pedal_threshold == 0 || state.mode_override)) {
+  if (!(int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override)) {
     return 0;
   }
 
@@ -58,8 +63,8 @@ float get_lock_target_adjustment() {
 // Only executed when in MODE_FWD/MODE_5050/MODE_CUSTOM
 uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert) {
   // Handle 5050 mode.
-  if (state.mode == MODE_5050) {
-    if (received_pedal_value >= state.pedal_threshold || state.pedal_threshold == 0) {
+  if (lock_target == 100) {
+    if (int(received_pedal_value) >= state.pedal_threshold || received_vehicle_speed < disableSpeed || state.pedal_threshold == 0) {
       return (invert ? (0xFE - value) : value);
     }
     return (invert ? 0xFE : 0x00);
@@ -71,51 +76,65 @@ uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert) {
     return (invert ? 0xFE : 0x00);
   }
 
-  // Apply a linear correction (hacky).
   float correction_factor = ((float)lock_target / 2) + 20;
   uint8_t corrected_value = value * (correction_factor / 100);
-  return (invert ? (0xFE - corrected_value) : corrected_value);
+  if (int(received_pedal_value) >= state.pedal_threshold || received_vehicle_speed < disableSpeed || state.pedal_threshold == 0) {
+    return (invert ? (0xFE - corrected_value) : corrected_value);
+  }
+  return (invert ? 0xFE : 0x00);
 }
 
 // Only executed when in MODE_FWD/MODE_5050/MODE_CUSTOM
-void get_lock_data(twai_message_t &rx_message_chs) {
+void getLockData(twai_message_t& rx_message_chs) {
   // Get the initial lock target.
   lock_target = get_lock_target_adjustment();
-  if (state.mode == MODE_7525) {
-    lock_target = 30;
-  }
+  //appliedTorque = map(get_lock_target_adjusted_value(0xFE, false), 0x16, 0xFE, 0xFE, 0x16);
+  //appliedTorque = constrain(appliedTorque, 0x16, 0xFE);
 
   // Edit the frames if configured as Gen1...
   if (haldexGeneration == 1) {
     switch (rx_message_chs.identifier) {
       case MOTOR1_ID:
-        rx_message_chs.data[0] = 0x00;                                         // these must play a factor - achieves ~169 without
+        rx_message_chs.data[0] = 0x00;                                         // various individual bits ('space gas', driving pedal, kick down, clutch, timeout brake, brake intervention, drinks-torque intervention?) was 0x01 - ignored
         rx_message_chs.data[1] = get_lock_target_adjusted_value(0xFE, false);  // rpm low byte
         rx_message_chs.data[2] = 0x21;                                         // rpm high byte
         rx_message_chs.data[3] = get_lock_target_adjusted_value(0x4E, false);  // set RPM to a value so the pre-charge pump runs
-        rx_message_chs.data[4] = 0x00;                                         // these must play a factor - achieves ~169 without
-        rx_message_chs.data[5] = 0x00;                                         // these must play a factor - achieves ~169 without
-        rx_message_chs.data[6] = get_lock_target_adjusted_value(0x16, false);  // set to a low value to control the req. transfer torque.  Main control value for Gen1
-        rx_message_chs.data[7] = 0x00;                                         // these must play a factor - achieves ~169 without
+        rx_message_chs.data[4] = get_lock_target_adjusted_value(0xFE, false);  // inner moment (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
+        rx_message_chs.data[5] = get_lock_target_adjusted_value(0xFE, false);  // driving pedal (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
+                                                                               // rx_message_chs.data[6] = get_lock_target_adjusted_value(0x16, false);  // set to a low value to control the req. transfer torque.  Main control value for Gen1
+        switch (state.mode) {
+          case MODE_FWD:
+            appliedTorque = get_lock_target_adjusted_value(0xFE, true);  // return 0xFE to disable
+            break;
+          case MODE_5050:
+            appliedTorque = get_lock_target_adjusted_value(0x16, false);  // return 0x16 to fully lock
+            break;
+          case MODE_7525:
+            appliedTorque = get_lock_target_adjusted_value(0x50, false);  // set to ~30% lock (0x96 = 15%, 0x56 = 27%)
+            break;
+        }
+
+        rx_message_chs.data[6] = appliedTorque;  // was 0x00
+        rx_message_chs.data[7] = 0x00;           // these must play a factor - achieves ~169 without
         break;
       case MOTOR3_ID:
-        rx_message_chs.data[2] = get_lock_target_adjusted_value(0xFE, false);
-        rx_message_chs.data[7] = get_lock_target_adjusted_value(0xFE, false);
+        rx_message_chs.data[2] = get_lock_target_adjusted_value(0xFE, false);  // pedal - ignored
+        rx_message_chs.data[7] = get_lock_target_adjusted_value(0xFE, false);  // throttle angle (100%), ignored
         break;
       case BRAKES1_ID:
-        rx_message_chs.data[1] = get_lock_target_adjusted_value(0x00, false);
-        rx_message_chs.data[2] = 0x00;
-        rx_message_chs.data[3] = get_lock_target_adjusted_value(0x0A, false);
+        rx_message_chs.data[1] = get_lock_target_adjusted_value(0x00, false);  // also controlling slippage.  Brake force can add 20%
+        rx_message_chs.data[2] = 0x00;                                         //  ignored
+        rx_message_chs.data[3] = get_lock_target_adjusted_value(0x0A, false);  // 0xA ignored?
         break;
       case BRAKES3_ID:
-        rx_message_chs.data[0] = get_lock_target_adjusted_value(0xFE, false);
-        rx_message_chs.data[1] = 0x0A;
-        rx_message_chs.data[2] = get_lock_target_adjusted_value(0xFE, false);
-        rx_message_chs.data[3] = 0x0A;
-        rx_message_chs.data[4] = 0x00;
-        rx_message_chs.data[5] = 0x0A;
-        rx_message_chs.data[6] = 0x00;
-        rx_message_chs.data[7] = 0x0A;
+        rx_message_chs.data[0] = get_lock_target_adjusted_value(0xFE, false);  // low byte, LEFT Front // affects slightly +2
+        rx_message_chs.data[1] = 0x0A;                                         // high byte, LEFT Front big effect
+        rx_message_chs.data[2] = get_lock_target_adjusted_value(0xFE, false);  // low byte, RIGHT Front// affects slightly +2
+        rx_message_chs.data[3] = 0x0A;                                         // high byte, RIGHT Front big effect
+        rx_message_chs.data[4] = 0x00;                                         // low byte, LEFT Rear
+        rx_message_chs.data[5] = 0x0A;                                         // high byte, LEFT Rear // 254+10? (5050 returns 0xA)
+        rx_message_chs.data[6] = 0x00;                                         // low byte, RIGHT Rear
+        rx_message_chs.data[7] = 0x0A;                                         // high byte, RIGHT Rear  // 254+10?
         break;
     }
   }
@@ -186,8 +205,6 @@ void get_lock_data(twai_message_t &rx_message_chs) {
       case MOTOR3_ID:
         //frame.data[2] = get_lock_target_adjusted_value(0xFE, false);
         //frame.data[7] = get_lock_target_adjusted_value(0x01, false);
-        break;
-      case MOTOR6_ID:
         break;
       case BRAKES1_ID:
         rx_message_chs.data[0] = 0x20;                                         // ASR 0x04 sets bit 4.  0x08 removes set.  Coupling open/closed
