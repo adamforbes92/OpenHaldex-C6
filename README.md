@@ -6,6 +6,9 @@ Originally based on the Teensy 4.0; the ESP32 features two TWAI (CAN) interfaces
 
 ![OpenHaldex-C6](/Images/BoardOverview.png)
 
+### Purchase
+If you want to purchase an assembled OpenHaldex C6 controller, you can do so here: [OpenHaldex C6 Controller - Forbes Automotive](https://forbes-automotive.com/products/openhaldex-t4-controller)
+
 ### Concept
 The basis of the module is to act as a middle man - read the incoming CAN frames destined for the OEM Haldex controller, and, if required, adjust these messages to 'trick' the Haldex into thinking more (or less) lock is required.  
 
