@@ -8,8 +8,11 @@ void readEEP() {
   pref.begin("isStandalone", false);
 
   pref.begin("disableControl", false);
-  pref.begin("followHandbrake", false);
   pref.begin("followBrake", false);
+  pref.begin("followHandbrake", false);
+
+  pref.begin("invertBrake", false);
+  pref.begin("invertHandbrake", false);
 
   pref.begin("haldexGen", false);
   pref.begin("lastMode", false);
@@ -27,8 +30,11 @@ void readEEP() {
     pref.putBool("isStandalone", isStandalone);
 
     pref.putBool("disableControl", disableController);
-    pref.putBool("followHandbrake", followHandbrake);
     pref.putBool("followBrake", followBrake);
+    pref.putBool("followHandbrake", followHandbrake);
+    pref.putBool("invertBrake", invertBrake);
+    pref.putBool("invertHandbrake", invertHandbrake);
+
     pref.putBool("otaUpdate", otaUpdate);
 
     pref.putUChar("haldexGen", haldexGeneration);
@@ -40,8 +46,13 @@ void readEEP() {
     broadcastOpenHaldexOverCAN = pref.getBool("broadcastOpen", false);
     isStandalone = pref.getBool("isStandalone", false);
     disableController = pref.getBool("disableControl", false);
-    followHandbrake = pref.getBool("followHandbrake", false);
+
     followBrake = pref.getBool("followBrake", false);
+    followHandbrake = pref.getBool("followHandbrake", false);
+
+    invertBrake = pref.getBool("invertBrake", false);
+    invertHandbrake = pref.getBool("invertHandbrake", false);
+
     otaUpdate = pref.getBool("otaUpdate", false);
 
     haldexGeneration = pref.getUChar("haldexGen", 1);
@@ -71,6 +82,9 @@ void readEEP() {
   DEBUG("    Standalone mode: %s", isStandalone ? "true" : "false");
   DEBUG("    Follow handbrake: %s", followHandbrake ? "true" : "false");
   DEBUG("    Follow brake: %s", followBrake ? "true" : "false");
+  DEBUG("    Invert handbrake: %s", invertHandbrake ? "true" : "false");
+  DEBUG("    Invert brake: %s", invertBrake ? "true" : "false");
+
   DEBUG("    Haldex Generation: %d", haldexGeneration);
   DEBUG("    Last Mode: %d", lastMode);
   DEBUG("    Disable Below Throttle: %d", disableThrottle);
@@ -91,8 +105,12 @@ void writeEEP(void *arg) {
     pref.putBool("broadcastOpen", broadcastOpenHaldexOverCAN);
     pref.putBool("isStandalone", isStandalone);
     pref.putBool("disableControl", disableController);
-    pref.putBool("followHandbrake", followHandbrake);
+
     pref.putBool("followBrake", followBrake);
+    pref.putBool("followHandbrake", followHandbrake);
+
+    pref.putBool("invertBrake", invertBrake);
+    pref.putBool("invertHandbrake", invertHandbrake);
 
     pref.putUChar("haldexGen", haldexGeneration);
     pref.putUChar("lastMode", lastMode);
@@ -106,6 +124,8 @@ void writeEEP(void *arg) {
     DEBUG("    Standalone mode: %s", isStandalone ? "true" : "false");
     DEBUG("    Follow handbrake: %s", followHandbrake ? "true" : "false");
     DEBUG("    Follow brake: %s", followBrake ? "true" : "false");
+    DEBUG("    Invert handbrake: %s", invertHandbrake ? "true" : "false");
+    DEBUG("    Invert brake: %s", invertBrake ? "true" : "false");
     DEBUG("    Haldex Generation: %d", haldexGeneration);
     DEBUG("    Last Mode: %d", lastMode);
     DEBUG("    Disable Below Throttle: %d", disableThrottle);

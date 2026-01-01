@@ -46,7 +46,10 @@ void setupUI() {
 
   ESPUI.addControl(Separator, "Follow", "", Dark, tabSetup);
   bool_followHandbrake = ESPUI.addControl(Switcher, "Follow Handbrake", String(followHandbrake), Dark, tabSetup, generalCallback);
-  bool_followBrakeSwitch = ESPUI.addControl(Switcher, "Follow Brake Switch", String(followBrake), Dark, tabSetup, generalCallback);
+  bool_invertHandbrake = ESPUI.addControl(Switcher, "Invert Handbrake", String(invertHandbrake), Dark, tabSetup, generalCallback);
+
+  bool_followBrake = ESPUI.addControl(Switcher, "Follow Brake", String(followBrake), Dark, tabSetup, generalCallback);
+  bool_invertBrake = ESPUI.addControl(Switcher, "Invert Brake", String(invertBrake), Dark, tabSetup, generalCallback);
 
   ESPUI.addControl(Separator, "Haldex Standalone", "", Dark, tabSetup);
   bool_isStandalone = ESPUI.addControl(Switcher, "Standalone", String(isStandalone), Dark, tabSetup, generalCallback);
@@ -81,6 +84,18 @@ void setupUI() {
   label_currentRPM = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
   ESPUI.addControl(Separator, "Boost", "", Dark, tabDiag);
   label_currentBoost = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+
+  ESPUI.addControl(Separator, "Brake Signal In", "", Dark, tabDiag);
+  label_brakeIn = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+
+  ESPUI.addControl(Separator, "Brake Signal Out", "", Dark, tabDiag);
+  label_brakeOut = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+
+  ESPUI.addControl(Separator, "Handbrake Signal In", "", Dark, tabDiag);
+  label_handbrakeIn = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+
+  ESPUI.addControl(Separator, "Handbrake Signal Out", "", Dark, tabDiag);
+  label_handbrakeOut = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
 
   //Finally, start up the UI.
   //This should only be called once we are connected to WiFi.
@@ -149,9 +164,15 @@ void generalCallback(Control *sender, int type) {
       followHandbrake = sender->value.toInt();
       break;
     case 25:
+      invertHandbrake = sender->value.toInt();
+      break;
+    case 26:
       followBrake = sender->value.toInt();
       break;
     case 27:
+      invertBrake = sender->value.toInt();
+      break;
+    case 29:
       isStandalone = sender->value.toInt();
 
       if (!isStandalone) {
@@ -170,7 +191,7 @@ void generalCallback(Control *sender, int type) {
         vTaskResume(handle_frames10);
       }
       break;
-    case 29:
+    case 31:
       broadcastOpenHaldexOverCAN = sender->value.toInt();
       break;
   }
@@ -281,6 +302,13 @@ void updateLabels(void *arg) {
     ESPUI.updateLabel(label_HaldexSpeedLimit, received_speed_limit ? "Active" : "Not Active");
 
     ESPUI.updateLabel(label_currentRPM, String(received_vehicle_rpm));
+
+    ESPUI.updateLabel(label_brakeIn, brakeSignalActive ? "Active" : "Not Active");
+    ESPUI.updateLabel(label_handbrakeIn, handbrakeSignalActive ? "Active" : "Not Active");
+
+    ESPUI.updateLabel(label_brakeOut, brakeActive ? "Active" : "Not Active");
+    ESPUI.updateLabel(label_handbrakeOut, handbrakeActive ? "Active" : "Not Active");
+
 
     vTaskDelay(labelRefresh / portTICK_PERIOD_MS);
   }

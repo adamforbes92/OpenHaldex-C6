@@ -22,13 +22,14 @@
 #include "InterruptButton.h"  // for mode button (internal & external)
 
 // debug options
-#define enableDebug 0
+#define enableDebug 1
 #define detailedDebug 0
 #define detailedDebugStack 0
 #define detailedDebugRuntimeStats 0
 #define detailedDebugCAN 0
 #define detailedDebugWiFi 0
 #define detailedDebugEEP 0
+#define detailedDebugIO 1
 
 // refresh rates
 #define eepRefresh 2000            // EEPROM save in ms
@@ -170,7 +171,16 @@ bool hasCANHaldex = false;
 bool broadcastOpenHaldexOverCAN = true;
 bool disableController = false;
 bool followBrake = false;
+bool invertBrake = false;
 bool followHandbrake = false;
+bool invertHandbrake = false;
+
+bool brakeActive = false;
+bool brakeSignalActive = false;
+
+bool handbrakeActive = false;
+bool handbrakeSignalActive = false;
+
 bool otaUpdate = false;
 
 uint32_t alerts_to_enable = 0;
@@ -323,6 +333,6 @@ const uint8_t lws_2[16][8] = {
 
 // WiFi UI handles
 uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed, int16_haldexGeneration;
-uint16_t bool_broadcastHaldex, bool_disableControl, bool_followHandbrake, bool_followBrakeSwitch, bool_isStandalone;
+uint16_t bool_broadcastHaldex, bool_disableControl, bool_followHandbrake, bool_followBrake, bool_invertBrake, bool_invertHandbrake, bool_isStandalone;
 
-int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_HaldexState, label_HaldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_HaldexCoupling, label_HaldexSpeedLimit, label_currentSpeed, label_currentRPM, label_currentBoost;
+int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_HaldexState, label_HaldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_HaldexCoupling, label_HaldexSpeedLimit, label_currentSpeed, label_currentRPM, label_currentBoost, label_brakeIn, label_brakeOut, label_handbrakeIn, label_handbrakeOut;

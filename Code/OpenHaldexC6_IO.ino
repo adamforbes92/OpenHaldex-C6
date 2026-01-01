@@ -96,16 +96,54 @@ void setupTasks() {
 
 void updateTriggers(void *arg) {
   while (1) {
-    if (followHandbrake) {
-      digitalWrite(gpio_hb_out, digitalRead(gpio_hb_in));
+    if (digitalRead(gpio_hb_in)) {
+      handbrakeSignalActive = true;
     } else {
-      digitalWrite(gpio_hb_out, LOW);
+      handbrakeSignalActive = false;
+    }
+
+    if (digitalRead(gpio_brake_in)) {
+      brakeSignalActive = true;
+    } else {
+      brakeSignalActive = false;
+    }
+
+    if (followHandbrake) {
+      if (invertHandbrake) {
+        digitalWrite(gpio_hb_out, !digitalRead(gpio_hb_in));
+        handbrakeActive = false;
+      } else {
+        digitalWrite(gpio_hb_out, digitalRead(gpio_hb_in));
+        handbrakeActive = true;
+      }
+    } else {
+      if (invertHandbrake) {
+        digitalWrite(gpio_hb_out, LOW);
+        handbrakeActive = false;
+
+      } else {
+        digitalWrite(gpio_hb_out, HIGH);
+        handbrakeActive = true;
+      }
     }
 
     if (followBrake) {
-      digitalWrite(gpio_brake_out, digitalRead(gpio_brake_in));
+      if (invertBrake) {
+        digitalWrite(gpio_brake_out, !digitalRead(gpio_brake_in));
+        brakeActive = false;
+      } else {
+        digitalWrite(gpio_brake_in, digitalRead(gpio_brake_in));
+        brakeActive = true;
+      }
     } else {
-      digitalWrite(gpio_brake_out, LOW);
+      if (invertBrake) {
+        digitalWrite(gpio_brake_in, LOW);
+        brakeActive = false;
+
+      } else {
+        digitalWrite(gpio_brake_in, HIGH);
+        brakeActive = true;
+      }
     }
 
     btnMode.processSyncEvents();      // Only required if using sync events
@@ -133,7 +171,7 @@ void showHaldexState(void *arg) {
     DEBUG("    reportClutch2: %d", received_report_clutch2);  // this means it also has a clutch issue
     DEBUG("    couplingOpen: %d", received_coupling_open);    // clutch fully disengaged
     DEBUG("    speedLimit: %d", received_speed_limit);        // hit a speed limit...
-    DEBUG("    tempCounter2: %d", state.pedal_threshold);                 // incrememting value for checking the response to vars...
+    DEBUG("    tempCounter2: %d", state.pedal_threshold);     // incrememting value for checking the response to vars...
 
     DEBUG("    hasChassisCAN: %d", hasCANChassis);          // incrememting value for checking the response to vars...
     DEBUG("    hasHaldexCAN: %d", hasCANHaldex);            // incrememting value for checking the response to vars...
@@ -147,6 +185,15 @@ void showHaldexState(void *arg) {
     if (isBusFailure) {
       DEBUG("    Bus Failure: True");
     }
+#endif
+
+#if detailedDebugIO
+    DEBUG("    Brake signal: %s", brakeSignalActive ? "true" : "false");
+    DEBUG("    Handbrake signal: %s", handbrakeSignalActive ? "true" : "false");
+
+    DEBUG("    Follow brake: %s", followBrake ? "true" : "false");
+    DEBUG("    Invert handbrake: %s", invertHandbrake ? "true" : "false");
+    DEBUG("    Invert brake: %s", invertBrake ? "true" : "false");
 #endif
 
 #if detailedDebugStack
