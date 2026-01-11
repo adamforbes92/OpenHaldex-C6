@@ -132,16 +132,16 @@ void updateTriggers(void *arg) {
         digitalWrite(gpio_brake_out, !digitalRead(gpio_brake_in));
         brakeActive = false;
       } else {
-        digitalWrite(gpio_brake_in, digitalRead(gpio_brake_in));
+        digitalWrite(gpio_brake_out, digitalRead(gpio_brake_in));
         brakeActive = true;
       }
     } else {
       if (invertBrake) {
-        digitalWrite(gpio_brake_in, LOW);
+        digitalWrite(gpio_brake_out, LOW);
         brakeActive = false;
 
       } else {
-        digitalWrite(gpio_brake_in, HIGH);
+        digitalWrite(gpio_brake_out, HIGH);
         brakeActive = true;
       }
     }

@@ -15,29 +15,32 @@ void setupUI() {
   ESPUI.setVerbosity(Verbosity::Quiet);  // turn off verbose debugging (Verbose for ON; Quiet for OFF)
   ESPUI.sliderContinuous = true;         // update slider valves constantly disabled.  No need and can cause crashes
 
-  // create basic tab
+  // create mode tab
   auto tabModes = ESPUI.addControl(Tab, "", "Haldex Modes");
   ESPUI.addControl(Separator, "Current Mode", "", Dark, tabModes);
   int16_currentMode = ESPUI.addControl(Select, "Current Mode", "", Dark, tabModes, generalCallback);
   ESPUI.addControl(Option, "Stock", "Stock", Dark, int16_currentMode);
   ESPUI.addControl(Option, "FWD", "FWD", Dark, int16_currentMode);
   ESPUI.addControl(Option, "50/50", "5050", Dark, int16_currentMode);
+  ESPUI.addControl(Option, "60/40", "6040", Dark, int16_currentMode);
   ESPUI.addControl(Option, "75/25", "7525", Dark, int16_currentMode);
+  ESPUI.addControl(Option, "Custom", "Custom", Dark, int16_currentMode);
 
   ESPUI.addControl(Separator, "Current Locking", "", Dark, tabModes);
   label_currentLocking = ESPUI.addControl(Label, "", "0", Dark, tabModes, generalCallback);
 
-  int16_disableThrottle = ESPUI.addControl(Slider, "Disable Below Throttle", String(disableThrottle), Dark, tabModes, generalCallback);
+  int16_disableThrottle = ESPUI.addControl(Slider, "Disable Below Throttle (%)", String(disableThrottle), Dark, tabModes, generalCallback);
   ESPUI.addControl(Min, "", "0", Dark, int16_disableThrottle);
   ESPUI.addControl(Max, "", "100", Dark, int16_disableThrottle);
 
-  int16_disableSpeed = ESPUI.addControl(Slider, "Disable Above Speed", String(disableSpeed), Dark, tabModes, generalCallback);
+  int16_disableSpeed = ESPUI.addControl(Slider, "Disable Above Speed (kmh)", String(disableSpeed), Dark, tabModes, generalCallback);
   ESPUI.addControl(Min, "", "0", Dark, int16_disableSpeed);
   ESPUI.addControl(Max, "", "300", Dark, int16_disableSpeed);
 
   bool_disableControl = ESPUI.addControl(Switcher, "Disable Controller", String(disableController), Dark, tabModes, generalCallback);
 
-  auto tabSetup = ESPUI.addControl(Tab, "", "General Setup");
+  // create General Setup tab
+  auto tabSetup = ESPUI.addControl(Tab, "", "Setup");
   ESPUI.addControl(Separator, "Haldex Generation", "", Dark, tabSetup);
   int16_haldexGeneration = ESPUI.addControl(Select, "Haldex Generation", "", Dark, tabSetup, generalCallback);
   ESPUI.addControl(Option, "Generation 1", "Gen1", Dark, int16_haldexGeneration);
@@ -57,7 +60,51 @@ void setupUI() {
   ESPUI.addControl(Separator, "Broadcast Haldex", "", Dark, tabSetup);
   bool_broadcastHaldex = ESPUI.addControl(Switcher, "Broadcast Haldex", String(broadcastOpenHaldexOverCAN), Dark, tabSetup, generalCallback);
 
-  auto tabDiag = ESPUI.addControl(Tab, "", "Diagnostics");
+  // create Custom Modes tab
+  String clearLabelStyle = "background-color: unset; width: 100%;";
+  auto tabCustom = ESPUI.addControl(Tab, "", "Custom");
+  ESPUI.addControl(Separator, "Lock on Speed or Throttle", "", Dark, tabCustom);
+  int16_customSelect = ESPUI.addControl(Select, "Speed/Throttle", "", Dark, tabCustom, generalCallback);
+  ESPUI.addControl(Option, "Speed", "Speed", Dark, int16_customSelect);
+  ESPUI.addControl(Option, "Throttle", "Throttle", Dark, int16_customSelect);
+
+  auto customSet_1 = ESPUI.addControl(Slider, "Custom Set 1", "0", Dark, tabCustom, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_1), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "0", None, customSet_1, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_1), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "100", None, customSet_1, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_1), clearLabelStyle);
+
+  auto customSet_2 = ESPUI.addControl(Slider, "Custom Set 2", "0", Dark, tabCustom, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_2), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "0", None, customSet_2, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_2), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "100", None, customSet_2, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_2), clearLabelStyle);
+
+  auto customSet_3 = ESPUI.addControl(Slider, "Custom Set 3", "0", Dark, tabCustom, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_3), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "0", None, customSet_3, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_3), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "100", None, customSet_3, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_3), clearLabelStyle);
+
+  auto customSet_4 = ESPUI.addControl(Slider, "Custom Set 4", "0", Dark, tabCustom, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_4), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "0", None, customSet_4, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_4), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "100", None, customSet_4, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_4), clearLabelStyle);
+
+  auto customSet_5 = ESPUI.addControl(Slider, "Custom Set 5", "0", Dark, tabCustom, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_5), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "0", None, customSet_5, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_5), clearLabelStyle);
+  ESPUI.addControl(Slider, "", "100", None, customSet_5, generalCallback);
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_5), clearLabelStyle);
+
+  // create Diag tab
+  auto tabDiag = ESPUI.addControl(Tab, "", "Diag.");
   ESPUI.addControl(Separator, "Chassis CAN", "", Dark, tabDiag);
   label_hasChassisCAN = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
   ESPUI.addControl(Separator, "Haldex CAN", "", Dark, tabDiag);
@@ -135,21 +182,27 @@ void generalCallback(Control *sender, int type) {
       if (sender->value == "5050") {
         state.mode = MODE_5050;
       }
+      if (sender->value == "6040") {
+        state.mode = MODE_6040;
+      }
       if (sender->value == "7525") {
         state.mode = MODE_7525;
       }
+      if (sender->value == "Custom") {
+        state.mode = MODE_CUSTOM;
+      }
       break;
-    case 10:
+    case 11:
       disableThrottle = sender->value.toInt();
       state.pedal_threshold = disableThrottle;
       break;
-    case 13:
+    case 14:
       disableSpeed = sender->value.toInt();
       break;
-    case 16:
+    case 17:
       disableController = sender->value.toInt();
       break;
-    case 19:
+    case 20:
       if (sender->value == "Gen1") {
         haldexGeneration = 1;
       }
@@ -160,19 +213,19 @@ void generalCallback(Control *sender, int type) {
         haldexGeneration = 4;
       }
       break;
-    case 24:
+    case 25:
       followHandbrake = sender->value.toInt();
       break;
-    case 25:
+    case 26:
       invertHandbrake = sender->value.toInt();
       break;
-    case 26:
+    case 27:
       followBrake = sender->value.toInt();
       break;
-    case 27:
+    case 28:
       invertBrake = sender->value.toInt();
       break;
-    case 29:
+    case 30:
       isStandalone = sender->value.toInt();
 
       if (!isStandalone) {
@@ -191,8 +244,66 @@ void generalCallback(Control *sender, int type) {
         vTaskResume(handle_frames10);
       }
       break;
-    case 31:
+    case 32:
       broadcastOpenHaldexOverCAN = sender->value.toInt();
+      break;
+
+    case 35:
+      if (sender->value == "Speed") {
+        state.mode = MODE_STOCK;
+      }
+      if (sender->value == "Throttle") {
+        state.mode = MODE_FWD;
+      }
+      break;
+    case 38:
+      disableSpeed = sender->value.toInt();  // custom 1 - speed
+      break;
+    case 40:
+      disableSpeed = sender->value.toInt();  // custom 1 - throttle
+      break;
+    case 42:
+      disableSpeed = sender->value.toInt();  // custom 1 - lock
+      break;
+
+    case 44:
+      disableSpeed = sender->value.toInt();  // custom 2 - speed
+      break;
+    case 46:
+      disableSpeed = sender->value.toInt();  // custom 2 - throttle
+      break;
+    case 48:
+      disableSpeed = sender->value.toInt();  // custom 2 - lock
+      break;
+
+    case 50:
+      disableSpeed = sender->value.toInt();  // custom 3 - speed
+      break;
+    case 52:
+      disableSpeed = sender->value.toInt();  // custom 3 - throttle
+      break;
+    case 54:
+      disableSpeed = sender->value.toInt();  // custom 3 - lock
+      break;
+
+    case 56:
+      disableSpeed = sender->value.toInt();  // custom 4 - speed
+      break;
+    case 58:
+      disableSpeed = sender->value.toInt();  // custom 4 - throttle
+      break;
+    case 60:
+      disableSpeed = sender->value.toInt();  // custom 4 - lock
+      break;
+
+    case 62:
+      disableSpeed = sender->value.toInt();  // custom 5 - speed
+      break;
+    case 64:
+      disableSpeed = sender->value.toInt();  // custom 5 - throttle
+      break;
+    case 66:
+      disableSpeed = sender->value.toInt();  // custom 5 - lock
       break;
   }
 }
@@ -260,22 +371,32 @@ void updateLabels(void *arg) {
 
         lastMode = 0;
         ESPUI.updateSelect(int16_currentMode, "Stock");
-        strip.setLedColorData(led_channel, led_brightness, 0, 0);
+        strip.setLedColorData(led_channel, led_brightness, 0, 0);  // red
         break;
       case 1:
         lastMode = 1;
         ESPUI.updateSelect(int16_currentMode, "FWD");
-        strip.setLedColorData(led_channel, 0, led_brightness, 0);
+        strip.setLedColorData(led_channel, 0, led_brightness, 0);  // green
         break;
       case 2:
         lastMode = 2;
         ESPUI.updateSelect(int16_currentMode, "5050");
-        strip.setLedColorData(led_channel, 0, 0, led_brightness);
+        strip.setLedColorData(led_channel, 0, 0, led_brightness);  // blue
         break;
       case 3:
         lastMode = 3;
+        ESPUI.updateSelect(int16_currentMode, "6040");
+        strip.setLedColorData(led_channel, 255, 16, 240);  // neon pink
+        break;
+      case 4:
+        lastMode = 4;
         ESPUI.updateSelect(int16_currentMode, "7525");
-        strip.setLedColorData(led_channel, 0, led_brightness, led_brightness);
+        strip.setLedColorData(led_channel, 0, led_brightness, led_brightness);  // cyan
+        break;
+      case 5:
+        lastMode = 5;
+        ESPUI.updateSelect(int16_currentMode, "Custom");
+        strip.setLedColorData(led_channel, led_brightness, led_brightness, led_brightness);  // white
         break;
     }
     strip.show();

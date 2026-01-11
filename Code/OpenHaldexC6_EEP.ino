@@ -20,6 +20,9 @@ void readEEP() {
   pref.begin("disableSpeed", false);
   pref.begin("otaUpdate", false);
 
+  pref.begin("customSpeed", false);
+  pref.begin("customThrottle", false);
+
   // first run comes with EEP valve of 255, so write actual values
   if (pref.getUInt("haldexGeneration") == 255) {
 #if detailedDebugEEP
@@ -36,6 +39,8 @@ void readEEP() {
     pref.putBool("invertHandbrake", invertHandbrake);
 
     pref.putBool("otaUpdate", otaUpdate);
+    pref.putBool("customSpeed", customSpeed);
+    pref.putBool("customThrottle", customThrottle);
 
     pref.putUChar("haldexGen", haldexGeneration);
     pref.putUChar("lastMode", lastMode);
@@ -54,6 +59,8 @@ void readEEP() {
     invertHandbrake = pref.getBool("invertHandbrake", false);
 
     otaUpdate = pref.getBool("otaUpdate", false);
+    customSpeed = pref.getBool("customSpeed", false);
+    customThrottle = pref.getBool("customThrottle", false);
 
     haldexGeneration = pref.getUChar("haldexGen", 1);
     lastMode = pref.getUChar("lastMode", 0);
@@ -73,6 +80,12 @@ void readEEP() {
         break;
       case 3:
         state.mode = MODE_7525;
+        break;
+      case 4:
+        state.mode = MODE_CUSTOM;
+        break;
+      default:
+        state.mode = MODE_FWD;
         break;
     }
   }
@@ -108,6 +121,9 @@ void writeEEP(void *arg) {
 
     pref.putBool("followBrake", followBrake);
     pref.putBool("followHandbrake", followHandbrake);
+
+    pref.putBool("customSpeed", customSpeed);
+    pref.putBool("customThrottle", customThrottle);
 
     pref.putBool("invertBrake", invertBrake);
     pref.putBool("invertHandbrake", invertHandbrake);

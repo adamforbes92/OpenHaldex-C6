@@ -1,6 +1,6 @@
 /*
 OpenHaldex-C6 - Forbes Automotive
-Haldex Controller for Gen1, Gen2 and Gen4 Haldex Controllers.  Supports WiFi.  Version: 1.03.  Versions in '_ver.ino'
+Haldex Controller for Gen1, Gen2 and Gen4 Haldex Controllers.  Supports WiFi.  Version: 1.06.  Versions in '_ver.ino'
 
 Codebase derived from OpenHaldex 4.0 - CAN data is the same, just ported to ESP32 C6.
 */
@@ -23,16 +23,15 @@ void setup() {
   DEBUG("OpenHaldex-C6 Launching...");
 #endif
 
-  readEEP();       // read EEPROM for stored settings  - in '_EEP.ino'
-  setupIO();       // setup gpio for input / output  - in '_io.ino'
-  setupCAN();      // setup two CAN buses  - in '_io.ino'
-  setupButtons();  // setup  'buttons' for changing mode (internal and external) - in '_io.ino'
-  setupTasks();    // setup tasks for each of the main functions - CAN Chassis/Haldex handling, Serial prints, Standalone, etc - in '_io.ino'
-
-  connectWifi();  // enable / start WiFi - in '_wifi.ino'
-  setupUI();      // setup wifi user interface - in '_wifi.ino'
+  readEEP();                                                      // read EEPROM for stored settings  - in '_EEP.ino'
+  setupIO();                                                      // setup gpio for input / output  - in '_io.ino'
+  setupCAN();                                                     // setup two CAN buses  - in '_io.ino'
+  setupButtons();                                                 // setup  'buttons' for changing mode (internal and external) - in '_io.ino'
+  setupTasks();                                                   // setup tasks for each of the main functions - CAN Chassis/Haldex handling, Serial prints, Standalone, etc - in '_io.ino'
+  connectWifi();                                                  // enable / start WiFi - in '_wifi.ino'
+  setupUI();                                                      // setup wifi user interface - in '_wifi.ino'
 }
 
 void loop() {
-  delay(100); // literally here to give more CPU time to tasks
+  delay(100);  // literally here to give more CPU time to tasks
 }

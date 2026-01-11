@@ -20,6 +20,9 @@ void Gen1_frames20() {
     case MODE_5050:
       appliedTorque = get_lock_target_adjusted_value(0x16, false);  // return 0x16 to fully lock
       break;
+    case MODE_6040:
+      appliedTorque = get_lock_target_adjusted_value(0x22, false);  // set to ~30% lock (0x96 = 15%) (0x96 = 15%, 0x56 = 27%)
+      break;
     case MODE_7525:
       appliedTorque = get_lock_target_adjusted_value(0x50, false);  // set to ~30% lock (0x96 = 15%) (0x96 = 15%, 0x56 = 27%)
       break;

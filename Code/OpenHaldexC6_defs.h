@@ -27,9 +27,9 @@
 #define detailedDebugStack 0
 #define detailedDebugRuntimeStats 0
 #define detailedDebugCAN 0
-#define detailedDebugWiFi 0
+#define detailedDebugWiFi 1
 #define detailedDebugEEP 0
-#define detailedDebugIO 1
+#define detailedDebugIO 0
 
 // refresh rates
 #define eepRefresh 2000            // EEPROM save in ms
@@ -140,10 +140,10 @@ extern void extendedCallback(Control *sender, int type, void *param);
 extern void updateLabels();
 
 // Values received from Haldex CAN
-uint8_t received_haldex_state;
-uint8_t received_haldex_engagement_raw;
-uint8_t received_haldex_engagement;
-uint8_t appliedTorque;
+uint8_t received_haldex_state = 0;
+uint8_t received_haldex_engagement_raw = 0;
+uint8_t received_haldex_engagement = 0;
+uint8_t appliedTorque = 0;
 
 bool received_report_clutch1;
 bool received_report_clutch2;
@@ -182,6 +182,8 @@ bool handbrakeActive = false;
 bool handbrakeSignalActive = false;
 
 bool otaUpdate = false;
+bool customSpeed = false;
+bool customThrottle = false;
 
 uint32_t alerts_to_enable = 0;
 
@@ -212,6 +214,7 @@ enum openhaldex_mode_t {
   MODE_STOCK,
   MODE_FWD,
   MODE_5050,
+  MODE_6040,
   MODE_7525,
   MODE_CUSTOM,
   openhaldex_mode_t_MAX
@@ -253,6 +256,8 @@ const char *get_openhaldex_mode_string(openhaldex_mode_t mode) {
       return "5050";
     case MODE_7525:
       return "7525";
+    case MODE_6040:
+      return "6040";
     case MODE_CUSTOM:
       return "CUSTOM";
     default:
@@ -332,7 +337,7 @@ const uint8_t lws_2[16][8] = {
 };
 
 // WiFi UI handles
-uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed, int16_haldexGeneration;
+uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed, int16_haldexGeneration, int16_customSelect;
 uint16_t bool_broadcastHaldex, bool_disableControl, bool_followHandbrake, bool_followBrake, bool_invertBrake, bool_invertHandbrake, bool_isStandalone;
 
 int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_HaldexState, label_HaldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_HaldexCoupling, label_HaldexSpeedLimit, label_currentSpeed, label_currentRPM, label_currentBoost, label_brakeIn, label_brakeOut, label_handbrakeIn, label_handbrakeOut;

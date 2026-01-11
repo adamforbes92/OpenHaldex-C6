@@ -6,7 +6,7 @@ void modeChange(void) {
   uint8_t next_mode = (uint8_t)state.mode + 1;
 
   // If the next mode is valid, change the current mode to it.
-  if (next_mode < (uint8_t)openhaldex_mode_t_MAX - 1) {
+  if (next_mode < (uint8_t)openhaldex_mode_t_MAX) {
     state.mode = (openhaldex_mode_t)next_mode;
   }
   // On overflow, start over from MODE_STOCK.

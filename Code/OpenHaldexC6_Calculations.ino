@@ -6,8 +6,18 @@ float get_lock_target_adjustment() {
       return 0;
 
     case MODE_5050:
+      if (state.pedal_threshold == 0 && disableSpeed == 0) {
+        return 100;
+      }
+
       if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
         return 100;
+      }
+      return 0;
+
+    case MODE_6040:
+      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
+        return 40;
       }
       return 0;
 
@@ -64,6 +74,7 @@ float get_lock_target_adjustment() {
 uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert) {
   // Handle 5050 mode.
   if (lock_target == 100) {
+    // is this needed?  Should be caught in get_lock_target_adjustment
     if (int(received_pedal_value) >= state.pedal_threshold || received_vehicle_speed < disableSpeed || state.pedal_threshold == 0) {
       return (invert ? (0xFE - value) : value);
     }
@@ -88,8 +99,6 @@ uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert) {
 void getLockData(twai_message_t& rx_message_chs) {
   // Get the initial lock target.
   lock_target = get_lock_target_adjustment();
-  //appliedTorque = map(get_lock_target_adjusted_value(0xFE, false), 0x16, 0xFE, 0xFE, 0x16);
-  //appliedTorque = constrain(appliedTorque, 0x16, 0xFE);
 
   // Edit the frames if configured as Gen1...
   if (haldexGeneration == 1) {
@@ -108,6 +117,9 @@ void getLockData(twai_message_t& rx_message_chs) {
             break;
           case MODE_5050:
             appliedTorque = get_lock_target_adjusted_value(0x16, false);  // return 0x16 to fully lock
+            break;
+          case MODE_6040:
+            appliedTorque = get_lock_target_adjusted_value(0x22, false);  // set to ~30% lock (0x96 = 15%, 0x56 = 27%)
             break;
           case MODE_7525:
             appliedTorque = get_lock_target_adjusted_value(0x50, false);  // set to ~30% lock (0x96 = 15%, 0x56 = 27%)
