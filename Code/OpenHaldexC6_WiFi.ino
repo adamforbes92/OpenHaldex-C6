@@ -68,40 +68,56 @@ void setupUI() {
   ESPUI.addControl(Option, "Speed", "Speed", Dark, int16_customSelect);
   ESPUI.addControl(Option, "Throttle", "Throttle", Dark, int16_customSelect);
 
-  auto customSet_1 = ESPUI.addControl(Slider, "Custom Set 1", "0", Dark, tabCustom, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_1), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "0", None, customSet_1, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_1), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "100", None, customSet_1, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_1), clearLabelStyle);
+  //add a 'custom' array for locking.
+  customSet_1 = ESPUI.addControl(Slider, "Custom Set 1", String(speedArray[0]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.addControl(Max, "", "300", Dark, customSet_1);                                                              // set max value to 300 (kmh)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_1), clearLabelStyle);                  // give it a label
+  ESPUI.addControl(Slider, "", String(throttleArray[0]), None, customSet_1, generalCallback);                       // create 'throttle' slider
+  ESPUI.addControl(Max, "", "100", Dark, customSet_1);                                                              // set max valve to 100(%)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_1), clearLabelStyle);               // give it a label
+  ESPUI.addControl(Slider, "", String(lockArray[0]), None, customSet_1, generalCallback);                           // create 'lock' slider
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_1), clearLabelStyle);                 // give it a label
+  ESPUI.addControl(Max, "", "100", Dark, customSet_1);                                                              // set max value to 100(%)
 
-  auto customSet_2 = ESPUI.addControl(Slider, "Custom Set 2", "0", Dark, tabCustom, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_2), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "0", None, customSet_2, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_2), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "100", None, customSet_2, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_2), clearLabelStyle);
+  customSet_2 = ESPUI.addControl(Slider, "Custom Set 2", String(speedArray[1]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.addControl(Max, "", "300", Dark, customSet_2);                                                              // set max value to 300 (kmh)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_2), clearLabelStyle);                  // give it a label
+  ESPUI.addControl(Slider, "", String(throttleArray[1]), None, customSet_2, generalCallback);                       // create 'throttle' slider
+  ESPUI.addControl(Max, "", "100", Dark, customSet_2);                                                              // set max valve to 100(%)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_2), clearLabelStyle);               // give it a label
+  ESPUI.addControl(Slider, "", String(lockArray[1]), None, customSet_2, generalCallback);                           // create 'lock' slider
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_2), clearLabelStyle);                 // give it a label
+  ESPUI.addControl(Max, "", "100", Dark, customSet_2);                                                              // set max value to 100(%)
 
-  auto customSet_3 = ESPUI.addControl(Slider, "Custom Set 3", "0", Dark, tabCustom, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_3), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "0", None, customSet_3, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_3), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "100", None, customSet_3, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_3), clearLabelStyle);
+  customSet_3 = ESPUI.addControl(Slider, "Custom Set 3", String(speedArray[2]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.addControl(Max, "", "300", Dark, customSet_3);                                                              // set max value to 300 (kmh)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_3), clearLabelStyle);                  // give it a label
+  ESPUI.addControl(Slider, "", String(throttleArray[2]), None, customSet_3, generalCallback);                       // create 'throttle' slider
+  ESPUI.addControl(Max, "", "100", Dark, customSet_3);                                                              // set max valve to 100(%)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_3), clearLabelStyle);               // give it a label
+  ESPUI.addControl(Slider, "", String(lockArray[2]), None, customSet_3, generalCallback);                           // create 'lock' slider
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_3), clearLabelStyle);                 // give it a label
+  ESPUI.addControl(Max, "", "100", Dark, customSet_3);                                                              // set max value to 100(%)
 
-  auto customSet_4 = ESPUI.addControl(Slider, "Custom Set 4", "0", Dark, tabCustom, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_4), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "0", None, customSet_4, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_4), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "100", None, customSet_4, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_4), clearLabelStyle);
+  customSet_4 = ESPUI.addControl(Slider, "Custom Set 4", String(speedArray[3]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.addControl(Max, "", "300", Dark, customSet_4);                                                              // set max value to 300 (kmh)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_4), clearLabelStyle);                  // give it a label
+  ESPUI.addControl(Slider, "", String(throttleArray[3]), None, customSet_4, generalCallback);                       // create 'throttle' slider
+  ESPUI.addControl(Max, "", "100", Dark, customSet_4);                                                              // set max valve to 100(%)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_4), clearLabelStyle);               // give it a label
+  ESPUI.addControl(Slider, "", String(lockArray[3]), None, customSet_4, generalCallback);                           // create 'lock' slider
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_4), clearLabelStyle);                 // give it a label
+  ESPUI.addControl(Max, "", "100", Dark, customSet_4);                                                              // set max value to 100(%)
 
-  auto customSet_5 = ESPUI.addControl(Slider, "Custom Set 5", "0", Dark, tabCustom, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_5), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "0", None, customSet_5, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_5), clearLabelStyle);
-  ESPUI.addControl(Slider, "", "100", None, customSet_5, generalCallback);
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_5), clearLabelStyle);
+  customSet_5 = ESPUI.addControl(Slider, "Custom Set 5", String(speedArray[4]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.addControl(Max, "", "300", Dark, customSet_5);                                                              // set max value to 300 (kmh)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_5), clearLabelStyle);                  // give it a label
+  ESPUI.addControl(Slider, "", String(throttleArray[4]), None, customSet_5, generalCallback);                       // create 'throttle' slider
+  ESPUI.addControl(Max, "", "100", Dark, customSet_5);                                                              // set max valve to 100(%)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_5), clearLabelStyle);               // give it a label
+  ESPUI.addControl(Slider, "", String(lockArray[4]), None, customSet_5, generalCallback);                           // create 'lock' slider
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_5), clearLabelStyle);                 // give it a label
+  ESPUI.addControl(Max, "", "100", Dark, customSet_5);                                                              // set max value to 100(%)
 
   // create Diag tab
   auto tabDiag = ESPUI.addControl(Tab, "", "Diag.");
@@ -143,6 +159,23 @@ void setupUI() {
 
   ESPUI.addControl(Separator, "Handbrake Signal Out", "", Dark, tabDiag);
   label_handbrakeOut = ESPUI.addControl(Label, "", "0", Dark, tabDiag, generalCallback);
+
+  // create OTA Update tab
+  auto tabOTA = ESPUI.addControl(Tab, "", "OTA Update");
+  ESPUI.addControl(Separator, "Firmware Information", "", Dark, tabOTA);
+  label_firmwareVersion = ESPUI.addControl(Label, "Firmware Version", getFirmwareVersion().c_str(), Dark, tabOTA);
+  label_chipModel = ESPUI.addControl(Label, "Chip Model", ESP.getChipModel(), Dark, tabOTA);
+  label_freeHeap = ESPUI.addControl(Label, "Free Heap", String(ESP.getFreeHeap()).c_str(), Dark, tabOTA);
+
+  ESPUI.addControl(Separator, "Update Instructions", "", Dark, tabOTA);
+  ESPUI.addControl(Label, "", "1. Ensure vehicle is stationary (speed = 0)", Dark, tabOTA);
+  ESPUI.addControl(Label, "", "2. Open: http://192.168.1.1:81/update", Dark, tabOTA);
+  ESPUI.addControl(Label, "", "3. Login: admin / haldex", Dark, tabOTA);
+  ESPUI.addControl(Label, "", "4. Upload firmware .bin file", Dark, tabOTA);
+  ESPUI.addControl(Label, "", "5. Wait for reboot", Dark, tabOTA);
+
+  ESPUI.addControl(Separator, "Status", "", Dark, tabOTA);
+  label_otaStatus = ESPUI.addControl(Label, "OTA Status", "Ready", Dark, tabOTA);
 
   //Finally, start up the UI.
   //This should only be called once we are connected to WiFi.
@@ -192,17 +225,17 @@ void generalCallback(Control *sender, int type) {
         state.mode = MODE_CUSTOM;
       }
       break;
-    case 11:
+    case 12:
       disableThrottle = sender->value.toInt();
       state.pedal_threshold = disableThrottle;
       break;
-    case 14:
+    case 15:
       disableSpeed = sender->value.toInt();
       break;
-    case 17:
+    case 18:
       disableController = sender->value.toInt();
       break;
-    case 20:
+    case 21:
       if (sender->value == "Gen1") {
         haldexGeneration = 1;
       }
@@ -213,19 +246,19 @@ void generalCallback(Control *sender, int type) {
         haldexGeneration = 4;
       }
       break;
-    case 25:
+    case 26:
       followHandbrake = sender->value.toInt();
       break;
-    case 26:
+    case 27:
       invertHandbrake = sender->value.toInt();
       break;
-    case 27:
+    case 28:
       followBrake = sender->value.toInt();
       break;
-    case 28:
+    case 29:
       invertBrake = sender->value.toInt();
       break;
-    case 30:
+    case 31:
       isStandalone = sender->value.toInt();
 
       if (!isStandalone) {
@@ -244,66 +277,68 @@ void generalCallback(Control *sender, int type) {
         vTaskResume(handle_frames10);
       }
       break;
-    case 32:
+    case 33:
       broadcastOpenHaldexOverCAN = sender->value.toInt();
       break;
 
-    case 35:
+    case 36:
       if (sender->value == "Speed") {
-        state.mode = MODE_STOCK;
+        customSpeed = true;
+        customThrottle = false;
       }
       if (sender->value == "Throttle") {
-        state.mode = MODE_FWD;
+        customSpeed = false;
+        customThrottle = true;
       }
       break;
-    case 38:
-      disableSpeed = sender->value.toInt();  // custom 1 - speed
-      break;
-    case 40:
-      disableSpeed = sender->value.toInt();  // custom 1 - throttle
+    case 39:
+      speedArray[0] = sender->value.toInt();  // custom 1 - speed
       break;
     case 42:
-      disableSpeed = sender->value.toInt();  // custom 1 - lock
+      throttleArray[0] = sender->value.toInt();  // custom 1 - throttle
+      break;
+    case 45:
+      lockArray[0] = sender->value.toInt();  // custom 1 - lock
       break;
 
-    case 44:
-      disableSpeed = sender->value.toInt();  // custom 2 - speed
-      break;
-    case 46:
-      disableSpeed = sender->value.toInt();  // custom 2 - throttle
-      break;
     case 48:
-      disableSpeed = sender->value.toInt();  // custom 2 - lock
+      speedArray[1] = sender->value.toInt();  // custom 2 - speed
       break;
-
-    case 50:
-      disableSpeed = sender->value.toInt();  // custom 3 - speed
-      break;
-    case 52:
-      disableSpeed = sender->value.toInt();  // custom 3 - throttle
+    case 51:
+      throttleArray[1] = sender->value.toInt();  // custom 2 - throttle
       break;
     case 54:
-      disableSpeed = sender->value.toInt();  // custom 3 - lock
+      lockArray[1] = sender->value.toInt();  // custom 2 - lock
       break;
 
-    case 56:
-      disableSpeed = sender->value.toInt();  // custom 4 - speed
-      break;
-    case 58:
-      disableSpeed = sender->value.toInt();  // custom 4 - throttle
+    case 57:
+      speedArray[2] = sender->value.toInt();  // custom 3 - speed
       break;
     case 60:
-      disableSpeed = sender->value.toInt();  // custom 4 - lock
+      throttleArray[2] = sender->value.toInt();  // custom 3 - throttle
+      break;
+    case 63:
+      lockArray[2] = sender->value.toInt();  // custom 3 - lock
       break;
 
-    case 62:
-      disableSpeed = sender->value.toInt();  // custom 5 - speed
-      break;
-    case 64:
-      disableSpeed = sender->value.toInt();  // custom 5 - throttle
-      break;
     case 66:
-      disableSpeed = sender->value.toInt();  // custom 5 - lock
+      speedArray[3] = sender->value.toInt();  // custom 4 - speed
+      break;
+    case 69:
+      throttleArray[3] = sender->value.toInt();  // custom 4 - throttle
+      break;
+    case 72:
+      lockArray[3] = sender->value.toInt();  // custom 4 - lock
+      break;
+
+    case 75:
+      speedArray[4] = sender->value.toInt();  // custom 5 - speed
+      break;
+    case 78:
+      throttleArray[4] = sender->value.toInt();  // custom 5 - throttle
+      break;
+    case 81:
+      lockArray[4] = sender->value.toInt();  // custom 5 - lock
       break;
   }
 }
@@ -325,7 +360,9 @@ void extendedCallback(Control *sender, int type, void *param) {
 
 void updateLabels(void *arg) {
   while (1) {
+#if detailedDebugStack
     stackupdateLabels = uxTaskGetStackHighWaterMark(NULL);
+#endif
 
     if ((millis() - lastCANChassisTick) > 500) {
       hasCANChassis = false;
@@ -345,6 +382,8 @@ void updateLabels(void *arg) {
     isBusFailure ? ESPUI.updateLabel(label_hasBusFailure, "Yes") : ESPUI.updateLabel(label_hasBusFailure, "No");
 
     disableController ? state.mode = MODE_STOCK : state.mode = state.mode;
+
+    customSpeed ? ESPUI.updateSelect(int16_customSelect, "Speed") : ESPUI.updateLabel(int16_customSelect, "Throttle");
 
     switch (haldexGeneration) {
       case 1:
@@ -430,6 +469,17 @@ void updateLabels(void *arg) {
     ESPUI.updateLabel(label_brakeOut, brakeActive ? "Active" : "Not Active");
     ESPUI.updateLabel(label_handbrakeOut, handbrakeActive ? "Active" : "Not Active");
 
+    // Update OTA tab labels
+    ESPUI.updateLabel(label_firmwareVersion, getFirmwareVersion());
+    ESPUI.updateLabel(label_chipModel, ESP.getChipModel());
+    ESPUI.updateLabel(label_freeHeap, String(ESP.getFreeHeap()));
+
+    // Update OTA status - warn if vehicle is moving
+    if (received_vehicle_speed > 0) {
+      ESPUI.updateLabel(label_otaStatus, "Vehicle Moving - OTA Disabled");
+    } else {
+      ESPUI.updateLabel(label_otaStatus, "Ready for Update");
+    }
 
     vTaskDelay(labelRefresh / portTICK_PERIOD_MS);
   }

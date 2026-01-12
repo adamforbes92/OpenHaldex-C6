@@ -23,6 +23,10 @@ void readEEP() {
   pref.begin("customSpeed", false);
   pref.begin("customThrottle", false);
 
+  pref.begin("throttleArray", false);
+  pref.begin("speedArray", false);
+  pref.begin("lockArray", false);
+
   // first run comes with EEP valve of 255, so write actual values
   if (pref.getUInt("haldexGeneration") == 255) {
 #if detailedDebugEEP
@@ -47,6 +51,9 @@ void readEEP() {
     pref.putUChar("disableThrottle", disableThrottle);
     pref.putUShort("disableSpeed", disableSpeed);
 
+    pref.putBytes("speedArray", (byte *)(&speedArray), sizeof(speedArray));
+    pref.putBytes("throttleArray", (byte *)(&throttleArray), sizeof(throttleArray));
+    pref.putBytes("lockArray", (byte *)(&lockArray), sizeof(lockArray));
   } else {
     broadcastOpenHaldexOverCAN = pref.getBool("broadcastOpen", false);
     isStandalone = pref.getBool("isStandalone", false);
@@ -59,7 +66,7 @@ void readEEP() {
     invertHandbrake = pref.getBool("invertHandbrake", false);
 
     otaUpdate = pref.getBool("otaUpdate", false);
-    customSpeed = pref.getBool("customSpeed", false);
+    customSpeed = pref.getBool("customSpeed", true);
     customThrottle = pref.getBool("customThrottle", false);
 
     haldexGeneration = pref.getUChar("haldexGen", 1);
@@ -67,6 +74,10 @@ void readEEP() {
     disableThrottle = pref.getUChar("disableThrottle", 0);
     state.pedal_threshold = disableThrottle;
     disableSpeed = pref.getUShort("disableSpeed", 0);
+
+    pref.getBytes("speedArray", &speedArray, sizeof(speedArray));
+    pref.getBytes("throttleArray", &throttleArray, sizeof(throttleArray));
+    pref.getBytes("lockArray", &lockArray, sizeof(lockArray));
 
     switch (lastMode) {
       case 0:
@@ -133,6 +144,10 @@ void writeEEP(void *arg) {
     pref.putUChar("disableThrottle", disableThrottle);
 
     pref.putUShort("disableSpeed", disableSpeed);
+
+    pref.putBytes("speedArray", (byte *)(&speedArray), sizeof(speedArray));
+    pref.putBytes("throttleArray", (byte *)(&throttleArray), sizeof(throttleArray));
+    pref.putBytes("lockArray", (byte *)(&lockArray), sizeof(throttleArray));
 
 #if detailedDebugEEP
     DEBUG("Written EEPROM with data:");

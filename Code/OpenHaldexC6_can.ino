@@ -31,6 +31,7 @@ void parseCAN_chs(void *arg) {
 #if detailedDebugStack
     stackCHS = uxTaskGetStackHighWaterMark(NULL);  // for capturing how much memory the task is using
 #endif
+
     while (twai_receive_v2(twai_bus_0, &rx_message_chs, 0) == ESP_OK) {  // while there are frames waiting, process them(!)
       lastCANChassisTick = millis();                                     // last frame recv. in ms
 

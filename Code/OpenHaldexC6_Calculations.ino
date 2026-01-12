@@ -27,6 +27,12 @@ float get_lock_target_adjustment() {
       }
       return 0;
 
+    case MODE_CUSTOM:
+      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
+        return 30;
+      }
+      return 0;
+
     default:
       return 0;
   }

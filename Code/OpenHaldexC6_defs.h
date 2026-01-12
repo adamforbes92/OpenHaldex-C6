@@ -22,12 +22,12 @@
 #include "InterruptButton.h"  // for mode button (internal & external)
 
 // debug options
-#define enableDebug 1
+#define enableDebug 0
 #define detailedDebug 0
 #define detailedDebugStack 0
 #define detailedDebugRuntimeStats 0
 #define detailedDebugCAN 0
-#define detailedDebugWiFi 1
+#define detailedDebugWiFi 0
 #define detailedDebugEEP 0
 #define detailedDebugIO 0
 
@@ -182,7 +182,7 @@ bool handbrakeActive = false;
 bool handbrakeSignalActive = false;
 
 bool otaUpdate = false;
-bool customSpeed = false;
+bool customSpeed = true;
 bool customThrottle = false;
 
 uint32_t alerts_to_enable = 0;
@@ -266,6 +266,10 @@ const char *get_openhaldex_mode_string(openhaldex_mode_t mode) {
   return "?";
 }
 
+uint16_t speedArray[] = { 0, 0, 0, 0, 0 };
+uint8_t throttleArray[] = { 0, 0, 0, 0, 0 };
+uint8_t lockArray[] = { 0, 0, 0, 0, 0 };
+
 // for running through vars to see effects
 uint8_t tempCounter;
 uint8_t tempCounter1;
@@ -338,6 +342,7 @@ const uint8_t lws_2[16][8] = {
 
 // WiFi UI handles
 uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed, int16_haldexGeneration, int16_customSelect;
+uint16_t customSet_1, customSet_2, customSet_3, customSet_4, customSet_5;
 uint16_t bool_broadcastHaldex, bool_disableControl, bool_followHandbrake, bool_followBrake, bool_invertBrake, bool_invertHandbrake, bool_isStandalone;
 
-int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_HaldexState, label_HaldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_HaldexCoupling, label_HaldexSpeedLimit, label_currentSpeed, label_currentRPM, label_currentBoost, label_brakeIn, label_brakeOut, label_handbrakeIn, label_handbrakeOut;
+int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_HaldexState, label_HaldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_HaldexCoupling, label_HaldexSpeedLimit, label_currentSpeed, label_currentRPM, label_currentBoost, label_brakeIn, label_brakeOut, label_handbrakeIn, label_handbrakeOut, label_firmwareVersion, label_chipModel, label_freeHeap, label_otaStatus;;

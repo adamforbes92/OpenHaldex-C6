@@ -8,4 +8,5 @@ V1.03 - confirmed Gen2, updated general codebase
 V1.04 - added feedback for incoming brake/handbrake sensors.  Added options to invert if required.
 V1.05 - brake out GPIO mapped incorrectly - changed
 V1.06 - added 6040 split
+V1.07 - added OTA updates (!) Thanks to Sasha!
 */

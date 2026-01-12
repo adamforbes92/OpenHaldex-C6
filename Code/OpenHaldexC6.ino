@@ -23,13 +23,14 @@ void setup() {
   DEBUG("OpenHaldex-C6 Launching...");
 #endif
 
-  readEEP();                                                      // read EEPROM for stored settings  - in '_EEP.ino'
-  setupIO();                                                      // setup gpio for input / output  - in '_io.ino'
-  setupCAN();                                                     // setup two CAN buses  - in '_io.ino'
-  setupButtons();                                                 // setup  'buttons' for changing mode (internal and external) - in '_io.ino'
-  setupTasks();                                                   // setup tasks for each of the main functions - CAN Chassis/Haldex handling, Serial prints, Standalone, etc - in '_io.ino'
-  connectWifi();                                                  // enable / start WiFi - in '_wifi.ino'
-  setupUI();                                                      // setup wifi user interface - in '_wifi.ino'
+  readEEP();       // read EEPROM for stored settings  - in '_EEP.ino'
+  setupIO();       // setup gpio for input / output  - in '_io.ino'
+  setupCAN();      // setup two CAN buses  - in '_io.ino'
+  setupButtons();  // setup  'buttons' for changing mode (internal and external) - in '_io.ino'
+  setupTasks();    // setup tasks for each of the main functions - CAN Chassis/Haldex handling, Serial prints, Standalone, etc - in '_io.ino'
+  connectWifi();   // enable / start WiFi - in '_wifi.ino'
+  setupUI();       // setup wifi user interface - in '_wifi.ino'
+  setupOTA();      // setup OTA update server - in '_OTA.ino'
 }
 
 void loop() {
