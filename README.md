@@ -67,15 +67,15 @@ The MX23A12NF connector pinout is:
 |-----|--------|-------|
 | 1 | Vbatt | 12 V |
 | 2 | Ground/MALT | — |
-| 3 | Chassis CAN Low | — |
-| 4 | Chassis CAN High | — |
-| 5 | Haldex CAN Low | — |
-| 6 | Haldex CAN High | — |
-| 7 | Switch Mode External | +12 V to activate |
-| 8 | Brake Switch In | +12 V to activate |
-| 9 | Brake Switch Out | — |
-| 10 | Handbrake Switch In | +12 V to activate |
-| 11 | Handbrake Switch Out | — |
+| 3 | Chassis CAN Low | to Chassis/ECU side |
+| 4 | Chassis CAN High | to Chassis/ECU side |
+| 5 | Haldex CAN Low | to Haldex side |
+| 6 | Haldex CAN High | to Haldex side |
+| 7 | Switch Mode External | +12v to activate |
+| 8 | Brake Switch In | +12v to activate |
+| 9 | Brake Switch Out | Gen1 differentials ONLY |
+| 10 | Handbrake Switch In | +12v to activate |
+| 11 | Handbrake Switch Out | Gen1 differentials ONLY |
 
 ### Uploading Code
 For users wishing to customise or edit the code, it is released here for free use.  Connect the Haldex controller via. a data USB-C cable (note some are ONLY power, so this needs to be checked).
