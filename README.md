@@ -17,30 +17,65 @@ The ESP32 C6 features two TWAI controllers - which allows CANBUS messages to be 
 The original Teensy had an external HC-05 Bluetooth chip which is limited support wise.  
 
 ### The Modes
-The controller allows for 4 main modes: Stock (act as OEM), FWD (zero lock), 7525 (some lock) and 5050 (100% lock) at the Haldex differential.  Generation 1, 2 and 4 have been tested on the bench to allow for a full understanding of what the stock CAN messages look like & therefore what messages need to be editted / created. 
+The controller allows for 5 main modes: Stock (act as OEM), FWD (zero lock), 7525 (some lock), 6040 (more lock) and 5050 (100% lock) at the Haldex differential.  Generation 1, 2 and 4 have been tested on the bench to allow for a full understanding of what the stock CAN messages look like & therefore what messages need to be editted / created. 
 
-These modes are displayed as colours using the 5mm PCB LED: Red (Stock), Green (FWD), Cyan (7525) and Blue (5050).  Custom modes are purple.
+These modes are displayed as colours using the 5mm PCB LED: Red (Stock), Green (FWD), Cyan (7525), Hot Pink (6040) and Blue (5050).  Custom modes are white.
 
-The modes can be toggled with the onboard 'Mode' button or changed via. WiFi.
+#### Custom Modes
+Custom modes allows the user to set up 5x specific lock points at either speed or throttle ranges.  It is currently in the code - but the implemention needs added(!).  At this stage it will only remember the numbers, not put them into practice!
+
+The modes can be toggled with the onboard 'Mode' button, changed via. WiFi or via. CAN.
 
 Disabling at low throttle inputs or high speed inputs are also configurable.
 
+#### Changing Modes via. CAN
+The modes can be changed via. CAN if required.  This is always enabled.  Broadcasting with an aftermarket ECU to CAN ID 0x6A0 will allow mode changing.  
+
+Byte 0 should be sent with the required mode number (noting numbers below).  The remaining 7 bytes are unused (for just now...)
+
+#### Receiving Modes via. CAN
+The default CAN address for broadcasting current state is on 0x6B0.  If you enable 'Broadcast OpenHaldex' you may find there are clashes on the CAN network.  This ID can be adjusted to suit.  It is deliberately a 'high' value because the default Bosch IDs have non-important devices set with high value IDs.  
+
+The following data is broadcast onto the CAN network; if enabled.  This could be used for aftermarket ECUs / clusters where there is a requirement to view current Haldex state:
+```
+    data[1] = isGen1Standalone + isGen2Standalone + isGen4Standalone;  // if is standalone.  Not used, but here for something to do
+    data[2] = (uint8_t)received_haldex_engagement_raw;                 // processed/mapped by FISCuntrol
+    data[3] = (uint8_t)lock_target;                                    // the lock % requested
+    data[4] = received_vehicle_speed;                                  // the vehicle speed
+    data[5] = state.mode_override;                                     // if is in 'override' mode
+    data[6] = (uint8_t)state.mode;                                     // current mode 
+    data[7] = (uint8_t)received_pedal_value;                           // vehicle pedal value
+```
+
+#### Mode Numbers
+Current mode (Byte 6) assumes:
+```
+  Stock = 0
+  FWD = 1,
+  5050 = 2,
+  6040 = 3,
+  7525 = 4,
+  Custom = 5,
+```
+
 ### WiFi Setup
-WiFi setup and configuration is always active.  Connect to 'OpenHaldexC6' by searching in WiFi devices and searching for 192.168.1.1 in a browser.  All settings are available for editing.  Should the WiFi page hang, a long press on the 'mode' button will reset the WiFi connection.
+WiFi setup and configuration is always active.  Connect to 'OpenHaldex-C6' by searching in WiFi devices and searching for 192.168.1.1 in a browser.  All settings are available for editing.  Should the WiFi page hang, a long press on the 'mode' button will reset the WiFi connection if it hangs.
 
 ### Pinouts
 The MX23A12NF connector pinout is:
-> Pin 1: Vbatt (12v)
-> Pin 2: Ground
-> Pin 3: Chassis CAN Low
-> Pin 4: Chassis CAN High
-> Pin 5: Haldex CAN LOW
-> Pin 6: Haldex CAN High
-> Pin 7: Switch Mode Exteral (+12v to activate)
-> Pin 8: Brake Switch In (+12v to activate)
-> Pin 9: Brake Switch Out
-> Pin 10: Handbrake Switch In (+12v to activate)
-> Pin 11: Handbrake Switch Out
+| Pin/ | Signal | Notes |
+|-----|--------|-------|
+| 1 | Vbatt | 12 V |
+| 2 | Ground/MALT | — |
+| 3 | Chassis CAN Low | — |
+| 4 | Chassis CAN High | — |
+| 5 | Haldex CAN Low | — |
+| 6 | Haldex CAN High | — |
+| 7 | Switch Mode External | +12 V to activate |
+| 8 | Brake Switch In | +12 V to activate |
+| 9 | Brake Switch Out | — |
+| 10 | Handbrake Switch In | +12 V to activate |
+| 11 | Handbrake Switch Out | — |
 
 ### Uploading Code
 For users wishing to customise or edit the code, it is released here for free use.  Connect the Haldex controller via. a data USB-C cable (note some are ONLY power, so this needs to be checked).
@@ -58,11 +93,7 @@ Similarly, the enclosures are also here.
 ![OpenHaldex-C6](/Images/BoardBottom.png)
 
 ### Nice to Haves
-The board supports broadcasting the Haldex output via. CAN - which allows pairing with the FIS controller to capture (and received) current and new modes.
-
 Flashing LED if there is an issue with writing CAN messages.
-
-Follow Brake/Handbrake signals (via. hard-wired signals).  The Haldex controller can 'pass-through' the brake/handbrake signals to enable/disable the controller or they can be ignored so that it is always active.
 
 ### Shout Outs
 Massive thanks to Arwid Vasilev for re-designing the PCB!
