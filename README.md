@@ -96,7 +96,8 @@ Similarly, the enclosures are also here.
 Flashing LED if there is an issue with writing CAN messages.
 
 ### Shout Outs
-Massive thanks to Arwid Vasilev for re-designing the PCB!
+Massive thanks to Arwid Vasilev for re-designing the PCB!  Now on V1.02!
+Massive thanks to LVT Technologies for adding in OTA updates - it's been something I've wanted to do for ages and this guy cracks it without question!  This'll make updating so much easier!  Cheers dude!
 
 ## Disclaimer
 It should be noted that this will modify Haldex operation and therefore can only be operated off-road and on a closed course.  
