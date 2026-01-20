@@ -35,4 +35,26 @@ void setup() {
 
 void loop() {
   delay(100);  // literally here to give more CPU time to tasks
+
+  if (rebootWiFi) {
+#if enableDebug
+    DEBUG("Restarting WiFi...");
+#endif
+
+    for (int i = 0; i <= 3; i++) {
+      strip.setLedColorData(led_channel, led_brightness, led_brightness, led_brightness);  // red
+      strip.show();
+      delay(50);
+      strip.setLedColorData(led_channel, 0, 0, 0);  // red
+      strip.show();
+      delay(50);
+    }
+
+    WiFi.disconnect(true, true);
+    WiFi.mode(WIFI_OFF);
+
+    connectWifi();  // enable / start WiFi - in '_wifi.ino'
+    //setupUI();      // setup wifi user interface - in '_wifi.ino'
+    rebootWiFi = false;
+  }
 }

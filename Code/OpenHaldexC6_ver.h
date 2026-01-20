@@ -1,6 +1,8 @@
 /*
 Version Control:
 
+*** remember and update FW_VERSION in '_defs.h' ***
+
 V1.00 - basic code for testing 
 V1.01 - added in reliable mode changing and eeprom saving
 V1.02 - confirmed Gen1 (OEM & Standalone), Gen4 (Standalone)
@@ -9,4 +11,5 @@ V1.04 - added feedback for incoming brake/handbrake sensors.  Added options to i
 V1.05 - brake out GPIO mapped incorrectly - changed
 V1.06 - added 6040 split
 V1.07 - added OTA updates (!) Thanks to Sasha!
+V1.08 - Sorted crash when long press / WiFi reset
 */

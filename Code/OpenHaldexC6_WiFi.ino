@@ -169,7 +169,7 @@ void setupUI() {
 
   ESPUI.addControl(Separator, "Update Instructions", "", Dark, tabOTA);
   ESPUI.addControl(Label, "", "1. Ensure vehicle is stationary (speed = 0)", Dark, tabOTA);
-  ESPUI.addControl(Label, "", "2. Open: http://192.168.1.1:81/update", Dark, tabOTA);
+  ESPUI.addControl(Label, "", "2. Open: 192.168.1.1:81/update", Dark, tabOTA);
   ESPUI.addControl(Label, "", "3. Login: admin / haldex", Dark, tabOTA);
   ESPUI.addControl(Label, "", "4. Upload firmware .bin file", Dark, tabOTA);
   ESPUI.addControl(Label, "", "5. Wait for reboot", Dark, tabOTA);
@@ -184,11 +184,7 @@ void setupUI() {
 }
 
 void disconnectWifi() {
-  WiFi.disconnect(true, true);
-  WiFi.mode(WIFI_OFF);
-
-  connectWifi();  // enable / start WiFi - in '_wifi.ino'
-  setupUI();      // setup wifi user interface - in '_wifi.ino'
+  rebootWiFi = true;
 }
 
 void generalCallback(Control *sender, int type) {

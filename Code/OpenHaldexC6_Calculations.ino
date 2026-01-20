@@ -116,7 +116,8 @@ void getLockData(twai_message_t& rx_message_chs) {
         rx_message_chs.data[3] = get_lock_target_adjusted_value(0x4E, false);  // set RPM to a value so the pre-charge pump runs
         rx_message_chs.data[4] = get_lock_target_adjusted_value(0xFE, false);  // inner moment (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
         rx_message_chs.data[5] = get_lock_target_adjusted_value(0xFE, false);  // driving pedal (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
-                                                                               // rx_message_chs.data[6] = get_lock_target_adjusted_value(0x16, false);  // set to a low value to control the req. transfer torque.  Main control value for Gen1
+        appliedTorque = rx_message_chs.data[6];
+        // rx_message_chs.data[6] = get_lock_target_adjusted_value(0x16, false);  // set to a low value to control the req. transfer torque.  Main control value for Gen1
         switch (state.mode) {
           case MODE_FWD:
             appliedTorque = get_lock_target_adjusted_value(0xFE, true);  // return 0xFE to disable

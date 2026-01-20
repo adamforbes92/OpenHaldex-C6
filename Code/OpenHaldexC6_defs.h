@@ -22,7 +22,7 @@
 #include "InterruptButton.h"  // for mode button (internal & external)
 
 // debug options
-#define enableDebug 0
+#define enableDebug 1
 #define detailedDebug 0
 #define detailedDebugStack 0
 #define detailedDebugRuntimeStats 0
@@ -82,6 +82,9 @@
 
 // wifi settings
 #define wifiHostName "OpenHaldex-C6"  // the WiFi name
+
+// Current firmware version (must match OpenHaldexC6_ver.h)
+#define FW_VERSION "1.08"
 
 static twai_handle_t twai_bus_0;  // for ESP32 C6 CANBUS 0
 static twai_handle_t twai_bus_1;  // for ESP32 C6 CANBUS 1
@@ -174,6 +177,8 @@ bool followBrake = false;
 bool invertBrake = false;
 bool followHandbrake = false;
 bool invertHandbrake = false;
+
+bool rebootWiFi = false;
 
 bool brakeActive = false;
 bool brakeSignalActive = false;

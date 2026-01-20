@@ -59,9 +59,6 @@
 // OTA password - CHANGE THIS FOR PRODUCTION USE!
 #define OTA_PASSWORD "haldex"
 
-// Current firmware version (must match OpenHaldexC6_ver.h)
-#define FW_VERSION "1.07"
-
 // OTA partition labels (must match partition table)
 #define OTA_PARTITION_LABEL_0 "ota_0"
 #define OTA_PARTITION_LABEL_1 "ota_1"
@@ -156,7 +153,7 @@ bool isSystemSafeForOTA() {
 // 1. CAN buses are initialized
 // 2. Outputs are set to safe state
 // 3. No faults are detected
-// 
+//
 // If this is not called, ESP-IDF will automatically rollback on next boot
 // ============================================================================
 void confirmFirmwareValidity() {
@@ -209,7 +206,7 @@ void confirmFirmwareValidity() {
 bool needsFirmwareConfirmation() {
   esp_ota_img_states_t ota_state;
   esp_err_t err = esp_ota_get_state_partition(esp_ota_get_running_partition(), &ota_state);
-  
+
   if (err != ESP_OK) {
     return false;
   }
@@ -237,7 +234,7 @@ void handleOTAUpdate(AsyncWebServerRequest *request, String filename, size_t ind
   // First chunk - initialize OTA
   if (index == 0) {
     otaUpdateInProgress = true;
-    
+
     // Get next OTA partition
     otaPartition = esp_ota_get_next_update_partition(NULL);
     if (otaPartition == NULL) {
@@ -296,10 +293,19 @@ void handleOTAUpdate(AsyncWebServerRequest *request, String filename, size_t ind
 #endif
 
     request->send(200, "text/plain", "OTA update complete. Rebooting... Firmware will be confirmed after safety checks pass.");
-    
+
     // Small delay to allow response to be sent
     delay(1000);
-    
+
+    for (int i = 0; i <= 8; i++) {
+      strip.setLedColorData(led_channel, led_brightness/2, led_brightness/2, led_brightness/2);  // red
+      strip.show();
+      delay(50);
+      strip.setLedColorData(led_channel, 0, 0, 0);  // red
+      strip.show();
+      delay(50);
+    }
+
     // Reboot
     ESP.restart();
   } else {
@@ -331,7 +337,7 @@ void setupOTA() {
   otaServer->on("/ota/info", HTTP_GET, [](AsyncWebServerRequest *request) {
     const esp_partition_t *running = esp_ota_get_running_partition();
     esp_app_desc_t app_info;
-    
+
     if (running != NULL) {
       esp_ota_get_partition_description(running, &app_info);
     }
@@ -368,7 +374,7 @@ void setupOTA() {
     json += "\"busFailure\":" + String(isBusFailure ? "true" : "false") + ",";
     json += "\"controllerDisabled\":" + String(disableController ? "true" : "false") + ",";
     json += "\"mode\":\"" + String(get_openhaldex_mode_string(state.mode)) + "\"";
-    
+
     if (!safe) {
       json += ",\"reason\":\"";
       if (received_vehicle_speed > 0) json += "Vehicle moving. ";
@@ -380,60 +386,60 @@ void setupOTA() {
     } else {
       json += ",\"reason\":\"System safe for OTA update\"";
     }
-    
+
     json += "}";
     request->send(200, "application/json", json);
   });
 
   // SAFETY-CRITICAL: OTA update endpoint with authentication
-  otaServer->on("/ota/update", HTTP_POST, 
+  otaServer->on(
+    "/ota/update", HTTP_POST,
     [](AsyncWebServerRequest *request) {
       // Check authentication
       if (!request->authenticate("admin", OTA_PASSWORD)) {
         return request->requestAuthentication();
       }
-      
+
       // SAFETY CHECK: Block if system not safe
       if (!isSystemSafeForOTA()) {
         request->send(403, "application/json", "{\"error\":\"OTA BLOCKED: System not in safe state\"}");
         return;
       }
-      
+
       request->send(200, "text/plain", "Ready for upload");
     },
-    handleOTAUpdate
-  );
+    handleOTAUpdate);
 
   // Legacy endpoint for AsyncElegantOTA compatibility (redirects to new endpoint)
   otaServer->on("/update", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (!request->authenticate("admin", OTA_PASSWORD)) {
       return request->requestAuthentication();
     }
-    
+
     // Redirect to info page with instructions
     String html = "<!DOCTYPE html><html><head><title>OTA Update</title></head><body>";
     html += "<h1>OTA Firmware Update</h1>";
     html += "<p>Use the /ota/update endpoint to upload firmware.</p>";
     html += "<p>Current version: " + String(FW_VERSION) + "</p>";
-    
+
     bool safe = isSystemSafeForOTA();
     html += "<p>System status: " + String(safe ? "<span style='color:green'>SAFE</span>" : "<span style='color:red'>NOT SAFE</span>") + "</p>";
-    
+
     if (!safe) {
       html += "<p style='color:red'><strong>OTA BLOCKED: System not in safe state</strong></p>";
     }
-    
+
     html += "<form method='POST' action='/ota/update' enctype='multipart/form-data'>";
     html += "<input type='file' name='firmware' accept='.bin'><br><br>";
     html += "<input type='submit' value='Upload Firmware' " + String(safe ? "" : "disabled") + ">";
     html += "</form>";
     html += "</body></html>";
-    
+
     request->send(200, "text/html", html);
   });
 
   otaServer->begin();
-  
+
 #if enableDebug || detailedDebugWiFi
   DEBUG("[OTA] OTA server started successfully!");
   DEBUG("[OTA] Update URL: http://192.168.1.1:81/ota/update");
