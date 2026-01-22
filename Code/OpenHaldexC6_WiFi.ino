@@ -1,3 +1,4 @@
+void setupAPI();
 void connectWifi() {
   WiFi.hostname(wifiHostName);
 #if detailedDebugWiFi
@@ -180,6 +181,8 @@ void setupUI() {
   //Finally, start up the UI.
   //This should only be called once we are connected to WiFi.
   ESPUI.begin(wifiHostName);
+  // Register HTTP API routes on same server
+  setupAPI();
   //WiFi.setTxPower(WIFI_POWER_8_5dBm);  // set a lower power mode (some C3 aerials aren't great and leaving it high causes failures)
 }
 
