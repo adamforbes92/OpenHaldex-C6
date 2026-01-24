@@ -13,4 +13,5 @@ V1.06 - added 6040 split
 V1.07 - added OTA updates (!) Thanks to Sasha!
 V1.08 - Sorted crash when long press / WiFi reset
 V1.09 - revised throttle AND speed setpoints to work together with enable/disable lock - thanks to Chris!
+V1.10 - added custom mode to allow custom lock percentage (based on speed/throttle/body)
 */

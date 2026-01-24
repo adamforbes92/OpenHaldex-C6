@@ -4,23 +4,23 @@ static inline bool lock_enabled() {
   bool speed_ok = false;
 
   if (state.mode != MODE_CUSTOM) {
-    throttle_ok = (state.pedal_threshold == 0) || (int(received_pedal_value) <= state.pedal_threshold);
-    speed_ok = (disableSpeed == 0) || (received_vehicle_speed >= disableSpeed);
+    throttle_ok = (state.pedal_threshold == 0) || (int(received_pedal_value) >= state.pedal_threshold);
+    speed_ok = (disableSpeed == 0) || (received_vehicle_speed <= disableSpeed);
     return throttle_ok && speed_ok;
   }
 
   if (state.mode == MODE_CUSTOM) {
     if (customSpeed && !customThrottle) {
-      speed_ok = (speedArray[0] == 0) || (received_vehicle_speed >= speedArray[0]);
+      speed_ok = (speedArray[0] == 0) || (received_vehicle_speed <= speedArray[0]);
       throttle_ok = true;
     }
     if (customThrottle && !customSpeed) {
-      throttle_ok = (throttleArray[0] == 0) || (int(received_pedal_value) <= throttleArray[0]);
+      throttle_ok = (throttleArray[0] == 0) || (int(received_pedal_value) >= throttleArray[0]);
       speed_ok = true;
     }
     if (customThrottle && customSpeed) {
-      speed_ok = (speedArray[0] == 0) || (received_vehicle_speed >= speedArray[0]);
-      throttle_ok = (throttleArray[0] == 0) || (int(received_pedal_value) <= throttleArray[0]);
+      speed_ok = (speedArray[0] == 0) || (received_vehicle_speed <= speedArray[0]);
+      throttle_ok = (throttleArray[0] == 0) || (int(received_pedal_value) >= throttleArray[0]);
     }
 
     return throttle_ok && speed_ok;

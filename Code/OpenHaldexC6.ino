@@ -8,7 +8,7 @@ Codebase derived from OpenHaldex 4.0 - CAN data is the same, just ported to ESP3
 #include <OpenHaldexC6_defs.h>
 
 // Current firmware version (must match OpenHaldexC6_ver.h)
-#define FW_VERSION "1.09"
+#define FW_VERSION "1.10"
 
 void setup() {
 #if enableDebug || detailedDebug || detailedDebugCAN || detailedDebugWiFi || detailedDebugEEP || detailedDebugIO

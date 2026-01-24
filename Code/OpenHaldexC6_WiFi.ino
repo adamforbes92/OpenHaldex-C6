@@ -65,24 +65,24 @@ void setupUI() {
   // create Custom Modes tab
   String clearLabelStyle = "background-color: unset; width: 100%;";
   auto tabCustom = ESPUI.addControl(Tab, "", "Custom");
-  ESPUI.addControl(Separator, "Lock on Speed or Throttle", "", Dark, tabCustom);
-  int16_customSelect = ESPUI.addControl(Select, "Speed/Throttle", "", Dark, tabCustom, generalCallback);
+  ESPUI.addControl(Separator, "Lock on Throttle or Speed", "", Dark, tabCustom);
+  int16_customSelect = ESPUI.addControl(Select, "Throttle/Speed", "", Dark, tabCustom, generalCallback);
   ESPUI.addControl(Option, "Speed", "Speed", Dark, int16_customSelect);
   ESPUI.addControl(Option, "Throttle", "Throttle", Dark, int16_customSelect);
   ESPUI.addControl(Option, "Both", "Both", Dark, int16_customSelect);
 
   //add a 'custom' array for locking.
-  customSet_1_speed = ESPUI.addControl(Slider, "Custom Set 1", String(speedArray[0]), Dark, tabCustom, generalCallback);  // create 'speed' slider
-  ESPUI.addControl(Max, "", "300", Dark, customSet_1_speed);                                                              // set max value to 300 (kmh)
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_1_speed), clearLabelStyle);                  // give it a label
+  customSet_1_throttle = ESPUI.addControl(Slider, "Disable Below Throttle (%)", String(throttleArray[0]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.addControl(Max, "", "100", Dark, customSet_1_throttle);                                                                               // set max valve to 100(%)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_1_throttle), clearLabelStyle);                                // give it a label
 
-  customSet_1_throttle = ESPUI.addControl(Slider, "Custom Set 1", String(throttleArray[0]), Dark, tabCustom, generalCallback);  // create 'speed' slider
-  ESPUI.addControl(Max, "", "100", Dark, customSet_1_throttle);                                                                 // set max valve to 100(%)
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Throttle", None, customSet_1_throttle), clearLabelStyle);                  // give it a label
+  customSet_1_speed = ESPUI.addControl(Slider, "Disable Above Speed (kmh)", String(speedArray[0]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.addControl(Max, "", "300", Dark, customSet_1_speed);                                                                           // set max value to 300 (kmh)
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Speed", None, customSet_1_speed), clearLabelStyle);                               // give it a label
 
-  customSet_1_lock = ESPUI.addControl(Slider, "Custom Set 1", String(lockArray[0]), Dark, tabCustom, generalCallback);  // create 'speed' slider
-  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_1_lock), clearLabelStyle);                // give it a label
-  ESPUI.addControl(Max, "", "100", Dark, customSet_1_lock);                                                             // set max value to 100(%)
+  customSet_1_lock = ESPUI.addControl(Slider, "Amount of Lock (%)", String(lockArray[0]), Dark, tabCustom, generalCallback);  // create 'speed' slider
+  ESPUI.setElementStyle(ESPUI.addControl(Label, "", "Lock %", None, customSet_1_lock), clearLabelStyle);                      // give it a label
+  ESPUI.addControl(Max, "", "100", Dark, customSet_1_lock);                                                                   // set max value to 100(%)
 
   // create Diag tab
   auto tabDiag = ESPUI.addControl(Tab, "", "Diag.");
@@ -263,10 +263,10 @@ void generalCallback(Control *sender, int type) {
       }
       break;
     case 42:
-      speedArray[0] = sender->value.toInt();  // custom 1 - speed
+      throttleArray[0] = sender->value.toInt();  // custom 1 - throttle
       break;
     case 45:
-      throttleArray[0] = sender->value.toInt();  // custom 1 - throttle
+      speedArray[0] = sender->value.toInt();  // custom 1 - speed
       break;
     case 48:
       lockArray[0] = sender->value.toInt();  // custom 1 - lock

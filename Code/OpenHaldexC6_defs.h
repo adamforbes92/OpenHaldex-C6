@@ -22,7 +22,7 @@
 #include "InterruptButton.h"  // for mode button (internal & external)
 
 // debug options
-#define enableDebug 1
+#define enableDebug 0
 #define detailedDebug 0
 #define detailedDebugStack 0
 #define detailedDebugRuntimeStats 0
