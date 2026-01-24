@@ -1,35 +1,61 @@
 // Only executed when in MODE_FWD/MODE_5050/MODE_CUSTOM
+static inline bool lock_enabled() {
+  bool throttle_ok = false;
+  bool speed_ok = false;
+
+  if (state.mode != MODE_CUSTOM) {
+    throttle_ok = (state.pedal_threshold == 0) || (int(received_pedal_value) <= state.pedal_threshold);
+    speed_ok = (disableSpeed == 0) || (received_vehicle_speed >= disableSpeed);
+    return throttle_ok && speed_ok;
+  }
+
+  if (state.mode == MODE_CUSTOM) {
+    if (customSpeed && !customThrottle) {
+      speed_ok = (speedArray[0] == 0) || (received_vehicle_speed >= speedArray[0]);
+      throttle_ok = true;
+    }
+    if (customThrottle && !customSpeed) {
+      throttle_ok = (throttleArray[0] == 0) || (int(received_pedal_value) <= throttleArray[0]);
+      speed_ok = true;
+    }
+    if (customThrottle && customSpeed) {
+      speed_ok = (speedArray[0] == 0) || (received_vehicle_speed >= speedArray[0]);
+      throttle_ok = (throttleArray[0] == 0) || (int(received_pedal_value) <= throttleArray[0]);
+    }
+
+    return throttle_ok && speed_ok;
+  }
+}
+
+// Only executed when in MODE_FWD/MODE_5050/MODE_CUSTOM
 float get_lock_target_adjustment() {
+  // Handle FWD and 5050 modes.
   // Handle FWD and 5050 modes.
   switch (state.mode) {
     case MODE_FWD:
       return 0;
 
     case MODE_5050:
-      if (state.pedal_threshold == 0 && disableSpeed == 0) {
-        return 100;
-      }
-
-      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
+      if (lock_enabled()) {
         return 100;
       }
       return 0;
 
     case MODE_6040:
-      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
+      if (lock_enabled()) {
         return 40;
       }
       return 0;
 
     case MODE_7525:
-      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
+      if (lock_enabled()) {
         return 30;
       }
       return 0;
 
     case MODE_CUSTOM:
-      if (int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override) {
-        return 30;
+      if (lock_enabled()) {
+        return lockArray[0];
       }
       return 0;
 
@@ -40,7 +66,7 @@ float get_lock_target_adjustment() {
   // Getting here means it's in not FWD or 5050/7525.
 
   // Check if locking is necessary.
-  if (!(int(received_pedal_value) >= state.pedal_threshold || state.pedal_threshold == 0 || received_vehicle_speed < disableSpeed || state.mode_override)) {
+  if (!lock_enabled()) {
     return 0;
   }
 
@@ -81,7 +107,7 @@ uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert) {
   // Handle 5050 mode.
   if (lock_target == 100) {
     // is this needed?  Should be caught in get_lock_target_adjustment
-    if (int(received_pedal_value) >= state.pedal_threshold || received_vehicle_speed < disableSpeed || state.pedal_threshold == 0) {
+    if (lock_enabled()) {
       return (invert ? (0xFE - value) : value);
     }
     return (invert ? 0xFE : 0x00);
@@ -95,7 +121,7 @@ uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert) {
 
   float correction_factor = ((float)lock_target / 2) + 20;
   uint8_t corrected_value = value * (correction_factor / 100);
-  if (int(received_pedal_value) >= state.pedal_threshold || received_vehicle_speed < disableSpeed || state.pedal_threshold == 0) {
+  if (lock_enabled()) {
     return (invert ? (0xFE - corrected_value) : corrected_value);
   }
   return (invert ? 0xFE : 0x00);
