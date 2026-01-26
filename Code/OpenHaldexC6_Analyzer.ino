@@ -21,6 +21,8 @@ static WiFiServer analyzerServer(kAnalyzerPort);
 static WiFiClient analyzerClient;
 static uint8_t analyzerActiveProtocol = ANALYZER_PROTOCOL_GVRET;
 static bool analyzerServerStarted = false;
+// Allow a little more time after TCP connect so control replies aren't dropped.
+static const uint32_t kGvretControlWriteTimeoutMs = 250;
 
 // -------------------------------
 // GVRET protocol (SavvyCAN)
@@ -48,15 +50,45 @@ static void resetGvretParser() {
   gvretE7Count = 0;
 }
 
-static void gvretWrite(const uint8_t *data, size_t len) {
-  if (analyzerClient && analyzerClient.connected()) {
-    analyzerClient.write(data, len);
+// Control replies are part of the GVRET handshake; deliver them reliably.
+static bool gvretWriteBlocking(const uint8_t *data, size_t len, uint32_t timeoutMs) {
+  if (!analyzerClient || !analyzerClient.connected()) {
+    return false;
   }
+
+  uint32_t start = millis();
+  size_t sent = 0;
+  while (sent < len) {
+    if (!analyzerClient.connected()) {
+      return false;
+    }
+    size_t written = analyzerClient.write(data + sent, len - sent);
+    if (written > 0) {
+      sent += written;
+      continue;
+    }
+    if (millis() - start > timeoutMs) {
+      return false;
+    }
+    vTaskDelay(1);
+  }
+
+  return true;
 }
 
+// Frame streaming is best-effort; drop if TCP can't keep up.
+static bool gvretWriteNonBlocking(const uint8_t *data, size_t len) {
+  if (!analyzerClient || !analyzerClient.connected()) {
+    return false;
+  }
+  if (analyzerClient.availableForWrite() < (int)len) {
+    return false;
+  }
+  return analyzerClient.write(data, len) == len;
+}
 static void gvretSendNumBuses() {
   const uint8_t payload[] = { 0xF1, 0x0C, 0x02 };
-  gvretWrite(payload, sizeof(payload));
+  gvretWriteBlocking(payload, sizeof(payload), kGvretControlWriteTimeoutMs);
 }
 
 static void gvretSendBusInfo() {
@@ -71,25 +103,25 @@ static void gvretSendBusInfo() {
     (uint8_t)(speedKbit & 0xFF), (uint8_t)((speedKbit >> 8) & 0xFF),
     0x00  // reserved
   };
-  gvretWrite(payload, sizeof(payload));
+  gvretWriteBlocking(payload, sizeof(payload), kGvretControlWriteTimeoutMs);
 }
 
 static void gvretSendExtendedBusInfo() {
   uint8_t payload[17] = { 0 };
   payload[0] = 0xF1;
   payload[1] = 0x0D;
-  gvretWrite(payload, sizeof(payload));
+  gvretWriteBlocking(payload, sizeof(payload), kGvretControlWriteTimeoutMs);
 }
 
 static void gvretSendDeviceInfo() {
   // Build/version fields are placeholders; SavvyCAN only needs a reply.
   const uint8_t payload[] = { 0xF1, 0x07, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  gvretWrite(payload, sizeof(payload));
+  gvretWriteBlocking(payload, sizeof(payload), kGvretControlWriteTimeoutMs);
 }
 
 static void gvretSendValidation() {
   const uint8_t payload[] = { 0xF1, 0x09 };
-  gvretWrite(payload, sizeof(payload));
+  gvretWriteBlocking(payload, sizeof(payload), kGvretControlWriteTimeoutMs);
 }
 
 static void gvretSendTimeSync() {
@@ -101,7 +133,7 @@ static void gvretSendTimeSync() {
   payload[3] = (uint8_t)((now >> 8) & 0xFF);
   payload[4] = (uint8_t)((now >> 16) & 0xFF);
   payload[5] = (uint8_t)((now >> 24) & 0xFF);
-  gvretWrite(payload, sizeof(payload));
+  gvretWriteBlocking(payload, sizeof(payload), kGvretControlWriteTimeoutMs);
 }
 
 static void gvretSendFrame(const AnalyzerFrame &entry) {
@@ -127,7 +159,7 @@ static void gvretSendFrame(const AnalyzerFrame &entry) {
     payload[11 + i] = entry.frame.data[i];
   }
 
-  gvretWrite(payload, 11 + entry.frame.data_length_code);
+  gvretWriteNonBlocking(payload, 11 + entry.frame.data_length_code);
 }
 
 static void gvretTransmitFrameFromHost() {
@@ -414,7 +446,11 @@ static void slcanSendFrame(const AnalyzerFrame &entry) {
   *ptr = '\0';
 
   if (analyzerClient && analyzerClient.connected()) {
-    analyzerClient.write((const uint8_t *)buffer, ptr - buffer);
+    size_t len = (size_t)(ptr - buffer);
+    // Best-effort send; drop if the TCP buffer is full.
+    if (analyzerClient.availableForWrite() >= (int)len) {
+      analyzerClient.write((const uint8_t *)buffer, len);
+    }
   }
 }
 
@@ -472,6 +508,9 @@ static void analyzerTask(void *arg) {
       WiFiClient pending = analyzerServer.available();
       if (pending) {
         analyzerClient = pending;
+        analyzerClient.setNoDelay(true);
+        // Give TCP a moment to finish setup so control replies can flush.
+        vTaskDelay(10 / portTICK_PERIOD_MS);
         resetAnalyzerClientState();
       } else {
         vTaskDelay(kAnalyzerPollDelayMs / portTICK_PERIOD_MS);
@@ -547,4 +586,5 @@ void analyzerQueueFrame(const twai_message_t &frame, uint8_t bus) {
   // Best-effort enqueue; drop when busy to avoid blocking CAN tasks.
   xQueueSend(analyzerQueue, &entry, 0);
 }
+
 

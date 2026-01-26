@@ -26,3 +26,8 @@ Adds a lightweight analyzer mode that turns the controller into a passive CAN br
 ### Notes
 - Analyzer mode is intended for inline sniffing; it does not generate any control frames.
 - When analyzer mode is disabled, the controller works normally.
+
+Suspected bug fixes for analyzer mode, so far:
+- GVRET control replies use a short blocking write (with a small post-connect delay) so SavvyCAN always completes the handshake.
+- Frame streaming remains non-blocking; if the TCP buffer fills, frames are dropped instead of stalling the bridge.
+- It is recommended to use SavvyCAN filters as the busy chassis bus will likely overload the TCP connection quickly.
