@@ -81,10 +81,11 @@ static bool gvretWriteNonBlocking(const uint8_t *data, size_t len) {
   if (!analyzerClient || !analyzerClient.connected()) {
     return false;
   }
-  if (analyzerClient.availableForWrite() < (int)len) {
-    return false;
-  }
-  return analyzerClient.write(data, len) == len;
+
+  // Some ESP32 builds report 0 from availableForWrite() even when a write succeeds.
+  // Try a single write and drop if it doesn't fully send to avoid blocking CAN tasks.
+  size_t written = analyzerClient.write(data, len);
+  return written == len;
 }
 static void gvretSendNumBuses() {
   const uint8_t payload[] = { 0xF1, 0x0C, 0x02 };
@@ -447,10 +448,9 @@ static void slcanSendFrame(const AnalyzerFrame &entry) {
 
   if (analyzerClient && analyzerClient.connected()) {
     size_t len = (size_t)(ptr - buffer);
-    // Best-effort send; drop if the TCP buffer is full.
-    if (analyzerClient.availableForWrite() >= (int)len) {
-      analyzerClient.write((const uint8_t *)buffer, len);
-    }
+    // Best-effort send; attempt once and drop if it doesn't fully send.
+    size_t written = analyzerClient.write((const uint8_t *)buffer, len);
+    (void)written;
   }
 }
 
