@@ -22,7 +22,7 @@
 #include "InterruptButton.h"  // for mode button (internal & external)
 
 // debug options
-#define enableDebug 1
+#define enableDebug 0
 #define detailedDebug 0
 #define detailedDebugStack 0
 #define detailedDebugRuntimeStats 0
@@ -83,9 +83,6 @@
 // wifi settings
 #define wifiHostName "OpenHaldex-C6"  // the WiFi name
 
-// Current firmware version (must match OpenHaldexC6_ver.h)
-#define FW_VERSION "1.08"
-
 static twai_handle_t twai_bus_0;  // for ESP32 C6 CANBUS 0
 static twai_handle_t twai_bus_1;  // for ESP32 C6 CANBUS 1
 
@@ -105,6 +102,16 @@ TaskHandle_t handle_frames10;    // for enabling/disabling 10ms frames
 // setup - main inputs
 bool isMPH = false;       // 0 = kph, 1 = mph
 #define mphFactor 621371  // to convert from kmh > mph
+
+// for EEP
+Preferences pref;  // for EEPROM / storing settings
+
+// for LED
+Freenove_ESP32_WS2812 strip = Freenove_ESP32_WS2812(1, gpio_led, led_channel, TYPE_RGB);  // 1 led, gpio pin, channel, type of LED
+
+// for mode changing (buttons & external inputs)
+InterruptButton btnMode(gpio_mode, HIGH, GPIO_MODE_INPUT, 1000, 500, 750, 80000);          // pin, GPIO_MODE_INPUT, state when pressed, long press, autorepeat, double-click, debounce
+InterruptButton btnMode_ext(gpio_mode_ext, HIGH, GPIO_MODE_INPUT, 1000, 500, 750, 80000);  // pin, GPIO_MODE_INPUT, state when pressed, long press, autorepeat, double-click, debounce
 
 // functions
 void frames10();
@@ -197,7 +204,7 @@ long lastCANHaldexTick;
 
 uint8_t lastMode = 0;
 uint8_t disableThrottle = 0;
-uint8_t disableSpeed = 0;
+uint16_t disableSpeed = 0;
 
 uint32_t rxtxcount = 0;  // frame counter
 uint32_t stackCHS = 0;
@@ -348,6 +355,9 @@ const uint8_t lws_2[16][8] = {
 // WiFi UI handles
 uint16_t int16_currentMode, label_currentLocking, int16_disableThrottle, int16_disableSpeed, int16_haldexGeneration, int16_customSelect;
 uint16_t customSet_1, customSet_2, customSet_3, customSet_4, customSet_5;
+
+uint16_t customSet_1_speed, customSet_1_throttle, customSet_1_lock;
+
 uint16_t bool_broadcastHaldex, bool_disableControl, bool_followHandbrake, bool_followBrake, bool_invertBrake, bool_invertHandbrake, bool_isStandalone;
 
 int label_hasChassisCAN, label_hasHaldexCAN, label_hasBusFailure, label_HaldexState, label_HaldexTemp, label_HaldexClutch1, label_HaldexClutch2, label_HaldexCoupling, label_HaldexSpeedLimit, label_currentSpeed, label_currentRPM, label_currentBoost, label_brakeIn, label_brakeOut, label_handbrakeIn, label_handbrakeOut, label_firmwareVersion, label_chipModel, label_freeHeap, label_otaStatus;;

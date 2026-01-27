@@ -69,7 +69,7 @@ void setupButtons() {
 void setupTasks() {
   // max task priority = 24
   xTaskCreate(showHaldexState, "showHaldexState", 5000, NULL, 1, NULL);
-  xTaskCreate(updateLabels, "updateLabels", 4000, NULL, 2, NULL);
+  xTaskCreate(updateLabels, "updateLabels", 6000, NULL, 2, NULL);
   xTaskCreate(writeEEP, "writeEEP", 2000, NULL, 3, NULL);
   xTaskCreate(updateTriggers, "updateTriggers", 2000, NULL, 4, NULL);
 
@@ -163,7 +163,7 @@ void showHaldexState(void *arg) {
     stackshowHaldexState = uxTaskGetStackHighWaterMark(NULL);
 
     DEBUG("Mode: %s", get_openhaldex_mode_string(state.mode));
-    DEBUG("    haldexEngagement: %d", received_haldex_engagement);  // this is the lock %
+    DEBUG("    Req:Act: %d:%d", int(lock_target), received_haldex_engagement);  // this is the lock %
 
 #if detailedDebug
     DEBUG("    Raw haldexEngagement: " BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(received_haldex_state));

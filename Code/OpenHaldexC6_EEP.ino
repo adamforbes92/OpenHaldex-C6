@@ -90,9 +90,12 @@ void readEEP() {
         state.mode = MODE_5050;
         break;
       case 3:
-        state.mode = MODE_7525;
+        state.mode = MODE_6040;
         break;
       case 4:
+        state.mode = MODE_7525;
+        break;
+      case 5:
         state.mode = MODE_CUSTOM;
         break;
       default:
