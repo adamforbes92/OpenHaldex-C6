@@ -8,7 +8,7 @@
 namespace {
 static const uint16_t kAnalyzerPort = 23;
 static const uint32_t kAnalyzerPollDelayMs = 1;
-static const size_t kAnalyzerQueueDepth = 64;
+static const size_t kAnalyzerQueueDepth = 8;
 
 struct AnalyzerFrame {
   twai_message_t frame;
