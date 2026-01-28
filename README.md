@@ -72,7 +72,7 @@ Users without the optional plug & play harness will be required to make the foll
 
 ### Pinouts
 The pins for installation (without the plug'n'play harness) is as follows:
-![OpenHaldex-C6](/Images/Installation Pins.png)
+![InstallationPins-C6](/Images/InstallationPins.png)
 
 The MX23A12NF connector pinout is:
 | Pin/ | Signal | Notes |
@@ -96,6 +96,7 @@ It is recommended to check back here regularly to find updates, submit bugs or f
 
 ### Over The Air Updates
 Over the air updates have been implemented and the process is as follows:
+
 > Download the most recent 'Release' - this will be saved locally on your phone/laptop/etc as a '.bin'.
 > Connect to OpenHaldex on WiFi
 > Go to 192.168.1.1:81/update
@@ -108,7 +109,7 @@ Over the air updates have been implemented and the process is as follows:
 ### CAN Sniffing / SavvyCAN
 For a dedicated SavvyCAN interface, users can choose 'Analyzer Mode' in 'Setup'.  This will allow the Haldex Controller to act as a CAN sniffer so that CAN frames can be captured from either bus.  Once Analyzer mode is enabled, ALL Haldex control will be disabled and the system will operate in 'OEM' mode.
 
-#### Connect SavvyCAN (GVRET)
+#### Connecting SavvyCAN (GVRET)
 > 1. Keep the OpenHaldex Wi-Fi AP connected.
 > 2. In SavvyCAN: **Add New Device Connection** -> **Network Connection (GVRET)**.
 > 3. IP address: `192.168.1.1` (port 23 is implicit in SavvyCAN's GVRET UI).
